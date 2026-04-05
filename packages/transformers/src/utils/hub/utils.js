@@ -18,7 +18,11 @@ export function pathJoin(...parts) {
         }
         return part;
     });
-    return parts.join('/');
+    // Drop empty segments so an empty `remotePathTemplate` doesn't produce
+    // a double slash (`<host>//<file>`). This makes it possible to point
+    // `env.remoteHost` at a flat bucket that serves files at the root
+    // without a model/revision prefix.
+    return parts.filter((part) => part !== '').join('/');
 }
 
 /**

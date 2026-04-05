@@ -22,6 +22,15 @@ function average(values) {
   return values.reduce((sum, value) => sum + value, 0) / Math.max(values.length, 1);
 }
 
+function lastAssistantText(decoded) {
+  return decoded.split('\n').slice(-1)[0] ?? decoded;
+}
+
+function compressionRatio(stats) {
+  if (!stats?.packed_bytes || !stats?.dense_bytes) return null;
+  return stats.dense_bytes / stats.packed_bytes;
+}
+
 async function runBenchmark(model, prompt, cacheImplementation) {
   const timings = [];
   let lastResult = null;
@@ -53,7 +62,12 @@ function printResult(label, benchmark, tokenizer) {
   console.log(`runs: ${benchmark.timings.map(formatMs).join(', ')}`);
   console.log(`avg: ${formatMs(benchmark.averageMs)}`);
   console.log('cache_stats:', benchmark.result.cache_stats);
+  const ratio = compressionRatio(benchmark.result.cache_stats);
+  if (ratio) {
+    console.log(`compression ratio: ${ratio.toFixed(3)}x`);
+  }
   console.log(`output: ${decoded}`);
+  return decoded;
 }
 
 console.log(`Loading tokenizer: ${MODEL_ID}`);
@@ -83,8 +97,8 @@ await model.generate({
 const dynamicBenchmark = await runBenchmark(model, prompt, 'dynamic');
 const turboBenchmark = await runBenchmark(model, prompt, 'turboquant');
 
-printResult('dynamic', dynamicBenchmark, tokenizer);
-printResult('turboquant', turboBenchmark, tokenizer);
+const dynamicOutput = printResult('dynamic', dynamicBenchmark, tokenizer);
+const turboOutput = printResult('turboquant', turboBenchmark, tokenizer);
 
 console.log('\n[summary]');
 console.log(`dynamic avg: ${formatMs(dynamicBenchmark.averageMs)}`);
@@ -92,5 +106,8 @@ console.log(`turboquant avg: ${formatMs(turboBenchmark.averageMs)}`);
 console.log(
   `speed ratio (dynamic / turboquant): ${(dynamicBenchmark.averageMs / turboBenchmark.averageMs).toFixed(3)}`,
 );
+console.log(`outputs match exactly: ${dynamicOutput === turboOutput}`);
+console.log(`dynamic tail: ${lastAssistantText(dynamicOutput)}`);
+console.log(`turbo tail: ${lastAssistantText(turboOutput)}`);
 
 await model.dispose();

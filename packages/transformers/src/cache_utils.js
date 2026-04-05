@@ -240,20 +240,31 @@ function packTurboQuantTensor(tensor, bits, { seed = 1337, residualBits = 1, res
         const headDim = source.dims.at(-1);
         const vectors = approx.length / headDim;
         residualNorms = new Float32Array(vectors);
+        const residualMeans = new Float32Array(vectors);
         const residualCodes = new Uint8Array(approx.length);
 
         for (let vectorIndex = 0; vectorIndex < vectors; ++vectorIndex) {
             const offset = vectorIndex * headDim;
+            let sum = 0;
             let normSq = 0;
             for (let i = 0; i < headDim; ++i) {
                 const value = rotated.data[offset + i] - approx[offset + i];
-                residualCodes[offset + i] = value >= 0 ? 1 : 0;
+                sum += value;
                 normSq += value * value;
+            }
+
+            const mean = sum / headDim;
+            residualMeans[vectorIndex] = mean;
+
+            for (let i = 0; i < headDim; ++i) {
+                const centered = rotated.data[offset + i] - approx[offset + i] - mean;
+                residualCodes[offset + i] = centered >= 0 ? 1 : 0;
             }
             residualNorms[vectorIndex] = Math.sqrt(normSq);
         }
 
         residualPacked = packBits(residualCodes, residualBits);
+        quantized.residualMeans = residualMeans;
     }
 
     return {
@@ -266,6 +277,7 @@ function packTurboQuantTensor(tensor, bits, { seed = 1337, residualBits = 1, res
         residualBits,
         residualPacked,
         residualNorms,
+        residualMeans: quantized.residualMeans ?? null,
     };
 }
 
@@ -281,12 +293,12 @@ function unpackQuantizedTensor(packed) {
             corrected = new Float32Array(approx.length);
             corrected.set(approx);
 
-            const scaleBase = 1 / Math.sqrt(headDim);
             for (let vectorIndex = 0; vectorIndex < vectors; ++vectorIndex) {
                 const offset = vectorIndex * headDim;
-                const amplitude = packed.residualNorms[vectorIndex] * scaleBase;
+                const mean = packed.residualMeans?.[vectorIndex] ?? 0;
+                const amplitude = packed.residualNorms[vectorIndex] / Math.sqrt(headDim);
                 for (let i = 0; i < headDim; ++i) {
-                    corrected[offset + i] += signs[offset + i] ? amplitude : -amplitude;
+                    corrected[offset + i] += mean + (signs[offset + i] ? amplitude : -amplitude);
                 }
             }
         }

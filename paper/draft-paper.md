@@ -176,12 +176,7 @@ Decode throughput is reported in tokens per second (TPS) as measured over the fu
 The theoretical packed footprint of the two-region cache is
 
 $$
-M_{\text{turbo}} \approx 2 \cdot L \cdot H_{kv} \cdot
-\Bigl[
-T_r \cdot D \cdot b_{\text{fp}}
-+
-(T - T_r) \cdot D \cdot b_{\text{eff}}
-\Bigr],
+M_{\text{turbo}} \approx 2 \cdot L \cdot H_{kv} \cdot \left[ T_r \cdot D \cdot b_{\text{fp}} + (T - T_r) \cdot D \cdot b_{\text{eff}} \right],
 $$
 
 where $T_r$ is the dense residual-window length, $b_{\text{fp}}$ is the per-element cost in the dense region, and $b_{\text{eff}}$ is the effective packed bitrate in the compressed region. Larger $T_r$ protects quality but reduces compression; smaller $T_r$ increases compression but risks output drift.

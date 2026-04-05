@@ -31,20 +31,31 @@ function compressionRatio(stats) {
   return stats.dense_bytes / stats.packed_bytes;
 }
 
+async function disposeGenerationResult(result) {
+  await result?.past_key_values?.dispose?.();
+  result?.sequences?.dispose?.();
+}
+
 async function runBenchmark(model, prompt, cacheImplementation) {
   const timings = [];
   let lastResult = null;
 
   for (let i = 0; i < RUNS; ++i) {
+    const captureResult = i === RUNS - 1;
+
     const started = performance.now();
-    lastResult = await model.generate({
+    const result = await model.generate({
       ...prompt,
       max_new_tokens: MAX_NEW_TOKENS,
       do_sample: false,
-      return_dict_in_generate: true,
+      return_dict_in_generate: captureResult,
       cache_implementation: cacheImplementation,
     });
     timings.push(performance.now() - started);
+
+    if (captureResult) {
+      lastResult = result;
+    }
   }
 
   return {
@@ -110,4 +121,6 @@ console.log(`outputs match exactly: ${dynamicOutput === turboOutput}`);
 console.log(`dynamic tail: ${lastAssistantText(dynamicOutput)}`);
 console.log(`turbo tail: ${lastAssistantText(turboOutput)}`);
 
+await disposeGenerationResult(dynamicBenchmark.result);
+await disposeGenerationResult(turboBenchmark.result);
 await model.dispose();

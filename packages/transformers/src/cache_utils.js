@@ -1,4 +1,5 @@
 import { Tensor } from './utils/tensor.js';
+import { DataTypeMap } from './utils/dtypes.js';
 
 /**
  * Extract a dense tensor map from decoder results.
@@ -51,6 +52,23 @@ function getPastKeyValuesName(name) {
 
 function cloneTensorData(data) {
     return typeof data.slice === 'function' ? data.slice() : Array.from(data);
+}
+
+function getBytesPerElement(type) {
+    const ctor = DataTypeMap[type];
+    return ctor?.BYTES_PER_ELEMENT ?? 0;
+}
+
+function getTensorByteLength(tensor) {
+    return tensor.size * getBytesPerElement(tensor.type);
+}
+
+async function cloneTensorToCPU(tensor) {
+    if (tensor.location === 'gpu-buffer' && typeof tensor.ort_tensor?.getData === 'function') {
+        const data = await tensor.ort_tensor.getData();
+        return new Tensor(tensor.type, cloneTensorData(data), tensor.dims.slice());
+    }
+    return new Tensor(tensor.type, cloneTensorData(tensor.data), tensor.dims.slice());
 }
 
 function packBits(codes, bits) {
@@ -225,8 +243,9 @@ function dequantizeArray(quantized) {
     return restored;
 }
 
-function packTurboQuantTensor(tensor, bits, { seed = 1337, residualBits = 1, residual = false } = {}) {
-    const source = tensor.type === 'float32' ? tensor : tensor.to('float32');
+async function packTurboQuantTensor(tensor, bits, { seed = 1337, residualBits = 1, residual = false } = {}) {
+    const cpuTensor = tensor.location === 'gpu-buffer' ? await cloneTensorToCPU(tensor) : tensor;
+    const source = cpuTensor.type === 'float32' ? cpuTensor : cpuTensor.to('float32');
     const rotated = applyRotation(source.data, source.dims, seed);
     const quantized = quantizeArray(rotated.data, bits);
 
@@ -320,12 +339,13 @@ function unpackQuantizedTensor(packed) {
     return tensor;
 }
 
-function packDenseTensor(tensor) {
+async function packDenseTensor(tensor) {
+    const cpuTensor = tensor.location === 'gpu-buffer' ? await cloneTensorToCPU(tensor) : tensor;
     return {
         format: 'dense',
-        type: tensor.type,
-        dims: tensor.dims.slice(),
-        data: cloneTensorData(tensor.data),
+        type: cpuTensor.type,
+        dims: cpuTensor.dims.slice(),
+        data: cloneTensorData(cpuTensor.data),
     };
 }
 
@@ -499,7 +519,7 @@ class _DynamicCache extends _PastKeyValues {
         let entries = 0;
         for (const value of Object.values(this)) {
             if (value instanceof Tensor) {
-                denseBytes += getTypedArrayByteLength(value.data);
+                denseBytes += getTensorByteLength(value);
                 entries += 1;
             }
         }
@@ -565,7 +585,7 @@ class _TurboQuantCache extends _PastKeyValues {
      * @param {{ disposeSourceDecoderResults?: boolean }} [options]
      * @returns {TurboQuantCache}
      */
-    update(decoderResults, options = {}) {
+    async update(decoderResults, options = {}) {
         const next = new TurboQuantCache(this.config);
 
         for (const name in decoderResults) {
@@ -576,8 +596,8 @@ class _TurboQuantCache extends _PastKeyValues {
             const bits = pastName.endsWith('.key') ? this.config.b_key : this.config.b_value;
             next.entries[pastName] =
                 bits >= 8
-                    ? packDenseTensor(tensor)
-                    : packTurboQuantTensor(tensor, bits, {
+                    ? await packDenseTensor(tensor)
+                    : await packTurboQuantTensor(tensor, bits, {
                           seed: this.config.rotation_seed ?? 1337,
                           residualBits: 1,
                           residual: pastName.endsWith('.key'),
@@ -622,12 +642,7 @@ class _TurboQuantCache extends _PastKeyValues {
             packedBytes += getPackedEntrySize(packed);
             const dims = packed.dims ?? [];
             const size = dims.reduce((a, b) => a * b, 1);
-            const bytesPerElement =
-                packed.originalType === 'float16' || packed.type === 'float16'
-                    ? 2
-                    : packed.originalType === 'float32' || packed.type === 'float32'
-                      ? 4
-                      : 4;
+            const bytesPerElement = getBytesPerElement(packed.originalType ?? packed.type) || 4;
             denseBytes += size * bytesPerElement;
             entries += 1;
         }

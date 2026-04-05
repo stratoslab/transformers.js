@@ -30,13 +30,13 @@ describe("Cache utilities", () => {
     expect(stats.packed_bytes).toBeGreaterThan(0);
   });
 
-  it("packs TurboQuant cache entries and preserves tensor shapes", () => {
+  it("packs TurboQuant cache entries and preserves tensor shapes", async () => {
     const decoderResults = {
       "present.0.key": makeKV(),
       "present.0.value": makeKV(),
     };
 
-    const cache = new TurboQuantCache({ b_key: 3, b_value: 3 }).update(decoderResults, {
+    const cache = await new TurboQuantCache({ b_key: 3, b_value: 3 }).update(decoderResults, {
       disposeSourceDecoderResults: false,
     });
 
@@ -56,13 +56,13 @@ describe("Cache utilities", () => {
     );
   });
 
-  it("reports compressed size smaller than dense size for TurboQuantCache", () => {
+  it("reports compressed size smaller than dense size for TurboQuantCache", async () => {
     const decoderResults = {
       "present.0.key": makeKV("float16"),
       "present.0.value": makeKV("float16"),
     };
 
-    const cache = new TurboQuantCache({ b_key: 3, b_value: 3 }).update(decoderResults, {
+    const cache = await new TurboQuantCache({ b_key: 3, b_value: 3 }).update(decoderResults, {
       disposeSourceDecoderResults: false,
     });
 

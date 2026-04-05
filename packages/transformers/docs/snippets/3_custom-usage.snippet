@@ -75,3 +75,5 @@ pnpm --dir packages/transformers benchmark:turboquant
 ```
 
 You can override the defaults with environment variables such as `MODEL_ID`, `DEVICE`, `DTYPE`, `MAX_NEW_TOKENS`, `RUNS`, and `PROMPT`.
+
+If you benchmark with `DEVICE=webgpu` from Node.js, note that ONNX Runtime WebGPU can still fail in native code before JavaScript sees an exception. If that happens, rerun with `DEVICE=cpu` to validate the harness itself, then measure WebGPU in a browser environment.

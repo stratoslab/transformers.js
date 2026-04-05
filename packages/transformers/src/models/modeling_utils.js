@@ -662,9 +662,9 @@ export class PreTrainedModel extends Callable {
      * @param {boolean} inputs.is_encoder_decoder
      * @returns {Object} The updated model inputs for the next generation iteration.
      */
-    _update_model_kwargs_for_generation({ generated_input_ids, outputs, model_inputs, is_encoder_decoder }) {
+    async _update_model_kwargs_for_generation({ generated_input_ids, outputs, model_inputs, is_encoder_decoder }) {
         // update past_key_values
-        model_inputs['past_key_values'] = this.getPastKeyValues(
+        model_inputs['past_key_values'] = await this.getPastKeyValues(
             outputs,
             model_inputs.past_key_values,
             false,
@@ -1029,7 +1029,7 @@ export class PreTrainedModel extends Callable {
                 break;
             }
 
-            model_inputs = this._update_model_kwargs_for_generation({
+            model_inputs = await this._update_model_kwargs_for_generation({
                 generated_input_ids,
                 outputs,
                 model_inputs,
@@ -1042,7 +1042,7 @@ export class PreTrainedModel extends Callable {
         }
 
         // Retrieve and dispose all final past key values (including encoder attentions)
-        const past_key_values = this.getPastKeyValues(
+        const past_key_values = await this.getPastKeyValues(
             outputs,
             model_inputs.past_key_values,
             true,
@@ -1089,7 +1089,7 @@ export class PreTrainedModel extends Callable {
      * @param {boolean} [disposeSourceDecoderResults=false] Whether cache ownership should dispose decoder `present.*` outputs.
      * @returns {DynamicCache} A new DynamicCache containing the updated past key values.
      */
-    getPastKeyValues(
+    async getPastKeyValues(
         decoderResults,
         pastKeyValues,
         disposeEncoderPKVs = false,
@@ -1097,10 +1097,10 @@ export class PreTrainedModel extends Callable {
         disposeSourceDecoderResults = false,
     ) {
         if (pastKeyValues?.update instanceof Function) {
-            return pastKeyValues.update(decoderResults, { disposeEncoderPKVs, disposeSourceDecoderResults });
+            return await pastKeyValues.update(decoderResults, { disposeEncoderPKVs, disposeSourceDecoderResults });
         }
         if (cacheFactory) {
-            return cacheFactory().update(decoderResults, { disposeEncoderPKVs, disposeSourceDecoderResults });
+            return await cacheFactory().update(decoderResults, { disposeEncoderPKVs, disposeSourceDecoderResults });
         }
         return new DynamicCache(buildPastKeyValuesTensorMap(decoderResults, pastKeyValues, disposeEncoderPKVs));
     }

@@ -129,7 +129,7 @@ export class SpeechT5ForTextToSpeech extends SpeechT5PreTrainedModel {
 
             this.addPastKeyValues(decoderFeeds, past_key_values);
             decoder_outputs = await sessionRun(this.sessions['decoder_model_merged'], decoderFeeds);
-            past_key_values = this.getPastKeyValues(decoder_outputs, past_key_values);
+            past_key_values = await this.getPastKeyValues(decoder_outputs, past_key_values);
 
             const { prob, spectrum } = decoder_outputs;
             spectrogramParts.push(spectrum);

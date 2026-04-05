@@ -95,16 +95,90 @@ function unpackBits(words, length, bits) {
     return codes;
 }
 
-function packQuantizedTensor(tensor, bits) {
-    const source = tensor.type === 'float32' ? tensor : tensor.to('float32');
-    const data = source.data;
-    const length = data.length;
+function isPowerOfTwo(value) {
+    return value > 0 && (value & (value - 1)) === 0;
+}
 
+function createRademacherSigns(dim, seed) {
+    const signs = new Float32Array(dim);
+    let state = seed >>> 0;
+    for (let i = 0; i < dim; ++i) {
+        state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+        signs[i] = state & 1 ? 1 : -1;
+    }
+    return signs;
+}
+
+function hadamardInPlace(buffer) {
+    for (let len = 1; len < buffer.length; len <<= 1) {
+        const step = len << 1;
+        for (let i = 0; i < buffer.length; i += step) {
+            for (let j = 0; j < len; ++j) {
+                const a = buffer[i + j];
+                const b = buffer[i + j + len];
+                buffer[i + j] = a + b;
+                buffer[i + j + len] = a - b;
+            }
+        }
+    }
+}
+
+function applyRotation(data, dims, seed) {
+    const headDim = dims.at(-1) ?? 0;
+    if (!isPowerOfTwo(headDim) || headDim === 0) {
+        return { data, rotated: false, seed: null };
+    }
+
+    const vectors = data.length / headDim;
+    const signs = createRademacherSigns(headDim, seed);
+    const rotated = new Float32Array(data.length);
+    const scratch = new Float32Array(headDim);
+    const norm = 1 / Math.sqrt(headDim);
+
+    for (let vectorIndex = 0; vectorIndex < vectors; ++vectorIndex) {
+        const offset = vectorIndex * headDim;
+        for (let i = 0; i < headDim; ++i) {
+            scratch[i] = data[offset + i] * signs[i];
+        }
+        hadamardInPlace(scratch);
+        for (let i = 0; i < headDim; ++i) {
+            rotated[offset + i] = scratch[i] * norm;
+        }
+    }
+
+    return { data: rotated, rotated: true, seed };
+}
+
+function invertRotation(data, dims, seed) {
+    const headDim = dims.at(-1) ?? 0;
+    if (!isPowerOfTwo(headDim) || headDim === 0) {
+        return data;
+    }
+
+    const vectors = data.length / headDim;
+    const signs = createRademacherSigns(headDim, seed);
+    const restored = new Float32Array(data.length);
+    const scratch = new Float32Array(headDim);
+    const norm = 1 / Math.sqrt(headDim);
+
+    for (let vectorIndex = 0; vectorIndex < vectors; ++vectorIndex) {
+        const offset = vectorIndex * headDim;
+        for (let i = 0; i < headDim; ++i) {
+            scratch[i] = data[offset + i];
+        }
+        hadamardInPlace(scratch);
+        for (let i = 0; i < headDim; ++i) {
+            restored[offset + i] = scratch[i] * norm * signs[i];
+        }
+    }
+
+    return restored;
+}
+
+function quantizeArray(data, bits) {
+    const length = data.length;
     if (length === 0) {
         return {
-            format: 'quantized',
-            originalType: tensor.type,
-            dims: tensor.dims.slice(),
             bits,
             min: 0,
             scale: 1,
@@ -134,9 +208,6 @@ function packQuantizedTensor(tensor, bits) {
     }
 
     return {
-        format: 'quantized',
-        originalType: tensor.type,
-        dims: tensor.dims.slice(),
         bits,
         min,
         scale,
@@ -145,12 +216,90 @@ function packQuantizedTensor(tensor, bits) {
     };
 }
 
-function unpackQuantizedTensor(packed) {
-    const codes = unpackBits(packed.packed, packed.length, packed.bits);
-    const restored = new Float32Array(packed.length);
+function dequantizeArray(quantized) {
+    const codes = unpackBits(quantized.packed, quantized.length, quantized.bits);
+    const restored = new Float32Array(quantized.length);
     for (let i = 0; i < codes.length; ++i) {
-        restored[i] = packed.min + packed.scale * codes[i];
+        restored[i] = quantized.min + quantized.scale * codes[i];
     }
+    return restored;
+}
+
+function packTurboQuantTensor(tensor, bits, { seed = 1337, residualBits = 1, residual = false } = {}) {
+    const source = tensor.type === 'float32' ? tensor : tensor.to('float32');
+    const rotated = applyRotation(source.data, source.dims, seed);
+    const quantized = quantizeArray(rotated.data, bits);
+
+    /** @type {Float32Array|null} */
+    let residualNorms = null;
+    /** @type {Uint32Array|null} */
+    let residualPacked = null;
+
+    if (residual && residualBits === 1 && (source.dims.at(-1) ?? 0) > 0 && quantized.length > 0) {
+        const approx = dequantizeArray(quantized);
+        const headDim = source.dims.at(-1);
+        const vectors = approx.length / headDim;
+        residualNorms = new Float32Array(vectors);
+        const residualCodes = new Uint8Array(approx.length);
+
+        for (let vectorIndex = 0; vectorIndex < vectors; ++vectorIndex) {
+            const offset = vectorIndex * headDim;
+            let normSq = 0;
+            for (let i = 0; i < headDim; ++i) {
+                const value = rotated.data[offset + i] - approx[offset + i];
+                residualCodes[offset + i] = value >= 0 ? 1 : 0;
+                normSq += value * value;
+            }
+            residualNorms[vectorIndex] = Math.sqrt(normSq);
+        }
+
+        residualPacked = packBits(residualCodes, residualBits);
+    }
+
+    return {
+        format: 'turboquant',
+        originalType: tensor.type,
+        dims: tensor.dims.slice(),
+        rotationSeed: rotated.seed,
+        rotated: rotated.rotated,
+        quantized,
+        residualBits,
+        residualPacked,
+        residualNorms,
+    };
+}
+
+function unpackQuantizedTensor(packed) {
+    if (packed.format === 'turboquant') {
+        const approx = dequantizeArray(packed.quantized);
+        let corrected = approx;
+
+        if (packed.residualPacked && packed.residualNorms) {
+            const headDim = packed.dims.at(-1);
+            const vectors = approx.length / headDim;
+            const signs = unpackBits(packed.residualPacked, approx.length, packed.residualBits);
+            corrected = new Float32Array(approx.length);
+            corrected.set(approx);
+
+            const scaleBase = 1 / Math.sqrt(headDim);
+            for (let vectorIndex = 0; vectorIndex < vectors; ++vectorIndex) {
+                const offset = vectorIndex * headDim;
+                const amplitude = packed.residualNorms[vectorIndex] * scaleBase;
+                for (let i = 0; i < headDim; ++i) {
+                    corrected[offset + i] += signs[offset + i] ? amplitude : -amplitude;
+                }
+            }
+        }
+
+        const restored = packed.rotated ? invertRotation(corrected, packed.dims, packed.rotationSeed) : corrected;
+        let tensor = new Tensor('float32', restored, packed.dims.slice());
+        if (packed.originalType !== 'float32') {
+            tensor = tensor.to(packed.originalType);
+        }
+        return tensor;
+    }
+
+    const restored = dequantizeArray(packed);
 
     let tensor = new Tensor('float32', restored, packed.dims.slice());
     if (packed.originalType !== 'float32') {
@@ -169,7 +318,7 @@ function packDenseTensor(tensor) {
 }
 
 function unpackDenseTensor(packed) {
-    if (packed.format === 'quantized') {
+    if (packed.format === 'quantized' || packed.format === 'turboquant') {
         return unpackQuantizedTensor(packed);
     }
     return new Tensor(packed.type, cloneTensorData(packed.data), packed.dims.slice());
@@ -355,7 +504,14 @@ class _TurboQuantCache extends _PastKeyValues {
             const pastName = getPastKeyValuesName(name);
             const tensor = decoderResults[name];
             const bits = pastName.endsWith('.key') ? this.config.b_key : this.config.b_value;
-            next.entries[pastName] = bits >= 8 ? packDenseTensor(tensor) : packQuantizedTensor(tensor, bits);
+            next.entries[pastName] =
+                bits >= 8
+                    ? packDenseTensor(tensor)
+                    : packTurboQuantTensor(tensor, bits, {
+                          seed: this.config.rotation_seed ?? 1337,
+                          residualBits: 1,
+                          residual: pastName.endsWith('.key'),
+                      });
 
             if (name.startsWith('present.') && tensor.dims.length >= 3) {
                 next.seq_length = tensor.dims.at(-2);

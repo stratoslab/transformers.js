@@ -324,6 +324,31 @@ function unpackDenseTensor(packed) {
     return new Tensor(packed.type, cloneTensorData(packed.data), packed.dims.slice());
 }
 
+function getTypedArrayByteLength(data) {
+    return data?.byteLength ?? 0;
+}
+
+function getPackedEntrySize(packed) {
+    if (packed.format === 'dense') {
+        return getTypedArrayByteLength(packed.data);
+    }
+
+    if (packed.format === 'quantized') {
+        return getTypedArrayByteLength(packed.packed) + 8;
+    }
+
+    if (packed.format === 'turboquant') {
+        return (
+            getTypedArrayByteLength(packed.quantized.packed) +
+            getTypedArrayByteLength(packed.residualPacked) +
+            getTypedArrayByteLength(packed.residualNorms) +
+            16
+        );
+    }
+
+    return 0;
+}
+
 /**
  * Base class for generation caches.
  *
@@ -368,6 +393,20 @@ class _PastKeyValues {
      * @returns {Promise<void>}
      */
     async dispose() {}
+
+    /**
+     * Return implementation-specific cache statistics.
+     * @returns {{implementation: string, entries: number, seq_length: number, packed_bytes: number, dense_bytes: number}}
+     */
+    getStats() {
+        return {
+            implementation: 'custom',
+            entries: 0,
+            seq_length: this.get_seq_length?.() ?? 0,
+            packed_bytes: 0,
+            dense_bytes: 0,
+        };
+    }
 }
 
 /**
@@ -440,6 +479,24 @@ class _DynamicCache extends _PastKeyValues {
             }
         }
         await Promise.all(promises);
+    }
+
+    getStats() {
+        let denseBytes = 0;
+        let entries = 0;
+        for (const value of Object.values(this)) {
+            if (value instanceof Tensor) {
+                denseBytes += getTypedArrayByteLength(value.data);
+                entries += 1;
+            }
+        }
+        return {
+            implementation: 'dynamic',
+            entries,
+            seq_length: entries > 0 ? this.get_seq_length() : 0,
+            packed_bytes: denseBytes,
+            dense_bytes: denseBytes,
+        };
     }
 }
 
@@ -541,6 +598,34 @@ class _TurboQuantCache extends _PastKeyValues {
     async dispose() {
         this.entries = Object.create(null);
         this.seq_length = 0;
+    }
+
+    getStats() {
+        let packedBytes = 0;
+        let denseBytes = 0;
+        let entries = 0;
+
+        for (const packed of Object.values(this.entries)) {
+            packedBytes += getPackedEntrySize(packed);
+            const dims = packed.dims ?? [];
+            const size = dims.reduce((a, b) => a * b, 1);
+            const bytesPerElement =
+                packed.originalType === 'float16' || packed.type === 'float16'
+                    ? 2
+                    : packed.originalType === 'float32' || packed.type === 'float32'
+                      ? 4
+                      : 4;
+            denseBytes += size * bytesPerElement;
+            entries += 1;
+        }
+
+        return {
+            implementation: 'turboquant',
+            entries,
+            seq_length: this.seq_length,
+            packed_bytes: packedBytes,
+            dense_bytes: denseBytes,
+        };
     }
 }
 

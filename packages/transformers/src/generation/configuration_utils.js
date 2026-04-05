@@ -107,6 +107,21 @@ export class GenerationConfig {
 
     /**
      * Additional configuration for custom cache implementations.
+     *
+     * For `cache_implementation: "turboquant"`, supported keys are:
+     * - `b_key` (number, default 4): bits per key coordinate.
+     * - `b_value` (number, default 8): bits per value coordinate.
+     * - `residual_length` (number, default 64): size of the dense recent-token
+     *   window kept uncompressed alongside the quantized prefix.
+     * - `rotation_seed` (number, default 1337): seed for the Rademacher random
+     *   rotation applied before quantization.
+     * - `quantization` ('sigma'|'minmax', default 'minmax'): use σ-clipping to
+     *   approximate Lloyd-Max levels on rotated data (recommended for long
+     *   contexts), or fall back to min-max.
+     * - `sigma_k` (number, default 2.5): half-width in σ units when
+     *   `quantization: 'sigma'`.
+     * - `residual_correction` (boolean, default true): add 1-bit QJL residual
+     *   correction per vector on key entries.
      * @type {Object|null}
      * @default null
      */

@@ -8,6 +8,9 @@ const RUNS = Number(process.env.RUNS ?? 3);
 const B_KEY = Number(process.env.B_KEY ?? 4);
 const B_VALUE = Number(process.env.B_VALUE ?? 8);
 const RESIDUAL_LENGTH = Number(process.env.RESIDUAL_LENGTH ?? 64);
+const EVICTION_BATCH = process.env.EVICTION_BATCH ? Number(process.env.EVICTION_BATCH) : null;
+const QUANTIZATION = process.env.QUANTIZATION ?? 'minmax'; // 'minmax' | 'sigma'
+const SIGMA_K = Number(process.env.SIGMA_K ?? 2.5);
 const PROMPT =
   process.env.PROMPT ??
   'Summarize how a Canton workflow assistant should review a proposed token transfer and list the main risk checks.';
@@ -59,6 +62,9 @@ async function runBenchmark(model, prompt, cacheImplementation) {
               b_key: B_KEY,
               b_value: B_VALUE,
               residual_length: RESIDUAL_LENGTH,
+              eviction_batch: EVICTION_BATCH,
+              quantization: QUANTIZATION,
+              sigma_k: SIGMA_K,
             }
           : undefined,
     });
@@ -96,7 +102,11 @@ console.log(`Loading tokenizer: ${MODEL_ID}`);
 const tokenizer = await AutoTokenizer.from_pretrained(MODEL_ID);
 
 console.log(`Loading model: ${MODEL_ID} (dtype=${DTYPE}, device=${DEVICE})`);
-console.log(`TurboQuant config: b_key=${B_KEY}, b_value=${B_VALUE}, residual_length=${RESIDUAL_LENGTH}`);
+console.log(
+  `TurboQuant config: b_key=${B_KEY}, b_value=${B_VALUE}, residual_length=${RESIDUAL_LENGTH}, ` +
+    `eviction_batch=${EVICTION_BATCH ?? '(=residual_length)'}, quantization=${QUANTIZATION}` +
+    (QUANTIZATION === 'sigma' ? `, sigma_k=${SIGMA_K}` : ''),
+);
 const model = await AutoModelForCausalLM.from_pretrained(MODEL_ID, {
   dtype: DTYPE,
   device: DEVICE,

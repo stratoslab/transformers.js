@@ -53,8 +53,115 @@ function cloneTensorData(data) {
     return typeof data.slice === 'function' ? data.slice() : Array.from(data);
 }
 
+function packBits(codes, bits) {
+    const words = new Uint32Array(Math.ceil((codes.length * bits) / 32));
+    const mask = (1 << bits) - 1;
+    let bitOffset = 0;
+
+    for (let i = 0; i < codes.length; ++i) {
+        const code = codes[i] & mask;
+        const wordIndex = bitOffset >>> 5;
+        const shift = bitOffset & 31;
+        words[wordIndex] |= code << shift;
+
+        const spill = shift + bits - 32;
+        if (spill > 0) {
+            words[wordIndex + 1] |= code >>> (bits - spill);
+        }
+        bitOffset += bits;
+    }
+
+    return words;
+}
+
+function unpackBits(words, length, bits) {
+    const codes = new Uint8Array(length);
+    const mask = (1 << bits) - 1;
+    let bitOffset = 0;
+
+    for (let i = 0; i < length; ++i) {
+        const wordIndex = bitOffset >>> 5;
+        const shift = bitOffset & 31;
+        let code = (words[wordIndex] >>> shift) & mask;
+
+        const spill = shift + bits - 32;
+        if (spill > 0) {
+            code |= (words[wordIndex + 1] & ((1 << spill) - 1)) << (bits - spill);
+        }
+        codes[i] = code;
+        bitOffset += bits;
+    }
+
+    return codes;
+}
+
+function packQuantizedTensor(tensor, bits) {
+    const source = tensor.type === 'float32' ? tensor : tensor.to('float32');
+    const data = source.data;
+    const length = data.length;
+
+    if (length === 0) {
+        return {
+            format: 'quantized',
+            originalType: tensor.type,
+            dims: tensor.dims.slice(),
+            bits,
+            min: 0,
+            scale: 1,
+            length: 0,
+            packed: new Uint32Array(0),
+        };
+    }
+
+    let min = Infinity;
+    let max = -Infinity;
+    for (let i = 0; i < length; ++i) {
+        const value = data[i];
+        if (value < min) min = value;
+        if (value > max) max = value;
+    }
+
+    const levels = (1 << bits) - 1;
+    const range = max - min;
+    const scale = range > 0 ? range / levels : 1;
+    const codes = new Uint8Array(length);
+
+    if (range > 0) {
+        for (let i = 0; i < length; ++i) {
+            const normalized = Math.round((data[i] - min) / scale);
+            codes[i] = Math.max(0, Math.min(levels, normalized));
+        }
+    }
+
+    return {
+        format: 'quantized',
+        originalType: tensor.type,
+        dims: tensor.dims.slice(),
+        bits,
+        min,
+        scale,
+        length,
+        packed: packBits(codes, bits),
+    };
+}
+
+function unpackQuantizedTensor(packed) {
+    const codes = unpackBits(packed.packed, packed.length, packed.bits);
+    const restored = new Float32Array(packed.length);
+    for (let i = 0; i < codes.length; ++i) {
+        restored[i] = packed.min + packed.scale * codes[i];
+    }
+
+    let tensor = new Tensor('float32', restored, packed.dims.slice());
+    if (packed.originalType !== 'float32') {
+        tensor = tensor.to(packed.originalType);
+    }
+    return tensor;
+}
+
 function packDenseTensor(tensor) {
     return {
+        format: 'dense',
         type: tensor.type,
         dims: tensor.dims.slice(),
         data: cloneTensorData(tensor.data),
@@ -62,6 +169,9 @@ function packDenseTensor(tensor) {
 }
 
 function unpackDenseTensor(packed) {
+    if (packed.format === 'quantized') {
+        return unpackQuantizedTensor(packed);
+    }
     return new Tensor(packed.type, cloneTensorData(packed.data), packed.dims.slice());
 }
 
@@ -244,7 +354,8 @@ class _TurboQuantCache extends _PastKeyValues {
 
             const pastName = getPastKeyValuesName(name);
             const tensor = decoderResults[name];
-            next.entries[pastName] = packDenseTensor(tensor);
+            const bits = pastName.endsWith('.key') ? this.config.b_key : this.config.b_value;
+            next.entries[pastName] = bits >= 8 ? packDenseTensor(tensor) : packQuantizedTensor(tensor, bits);
 
             if (name.startsWith('present.') && tensor.dims.length >= 3) {
                 next.seq_length = tensor.dims.at(-2);

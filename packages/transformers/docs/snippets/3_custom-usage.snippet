@@ -62,6 +62,11 @@ const turbo = await model.generate({
   do_sample: false,
   return_dict_in_generate: true,
   cache_implementation: 'turboquant',
+  cache_config: {
+    b_key: 4,
+    b_value: 8,
+    residual_length: 64,
+  },
 });
 
 console.log('baseline cache', baseline.cache_stats);
@@ -74,6 +79,8 @@ For repeated comparisons from the repo itself, use:
 pnpm --dir packages/transformers benchmark:turboquant
 ```
 
-You can override the defaults with environment variables such as `MODEL_ID`, `DEVICE`, `DTYPE`, `MAX_NEW_TOKENS`, `RUNS`, and `PROMPT`.
+You can override the defaults with environment variables such as `MODEL_ID`, `DEVICE`, `DTYPE`, `MAX_NEW_TOKENS`, `RUNS`, `PROMPT`, `B_KEY`, `B_VALUE`, and `RESIDUAL_LENGTH`.
+
+The current conservative starting point is `b_key=4`, `b_value=8`, and `residual_length=64`. This preserves a dense recent KV window and only compresses older cache positions.
 
 If you benchmark with `DEVICE=webgpu` from Node.js, note that ONNX Runtime WebGPU can still fail in native code before JavaScript sees an exception. If that happens, rerun with `DEVICE=cpu` to validate the harness itself, then measure WebGPU in a browser environment.

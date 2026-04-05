@@ -36,7 +36,7 @@ describe("Cache utilities", () => {
       "present.0.value": makeKV(),
     };
 
-    const cache = await new TurboQuantCache({ b_key: 3, b_value: 3 }).update(decoderResults, {
+    const cache = await new TurboQuantCache({ b_key: 3, b_value: 3, residual_length: 0 }).update(decoderResults, {
       disposeSourceDecoderResults: false,
     });
 
@@ -62,7 +62,7 @@ describe("Cache utilities", () => {
       "present.0.value": makeKV("float16"),
     };
 
-    const cache = await new TurboQuantCache({ b_key: 3, b_value: 3 }).update(decoderResults, {
+    const cache = await new TurboQuantCache({ b_key: 3, b_value: 3, residual_length: 0 }).update(decoderResults, {
       disposeSourceDecoderResults: false,
     });
 

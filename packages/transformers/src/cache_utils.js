@@ -1,4 +1,4 @@
-import { Tensor } from './utils/tensor.js';
+import { Tensor, cat } from './utils/tensor.js';
 import { DataTypeMap } from './utils/dtypes.js';
 
 /**
@@ -349,7 +349,95 @@ async function packDenseTensor(tensor) {
     };
 }
 
+function splitArrayBySequence(data, dims, tailLength) {
+    const seqDim = dims.at(-2) ?? 0;
+    const headDim = dims.at(-1) ?? 0;
+    const prefixLength = Math.max(seqDim - tailLength, 0);
+    const suffixLength = seqDim - prefixLength;
+    const leading = dims.slice(0, -2).reduce((a, b) => a * b, 1) || 1;
+    const prefix = prefixLength > 0 ? new data.constructor(leading * prefixLength * headDim) : null;
+    const suffix = suffixLength > 0 ? new data.constructor(leading * suffixLength * headDim) : null;
+
+    if (prefixLength === 0) {
+        suffix?.set(data);
+        return { prefix, prefixLength, suffix, suffixLength };
+    }
+
+    const fullStride = seqDim * headDim;
+    const prefixStride = prefixLength * headDim;
+    const suffixStride = suffixLength * headDim;
+    for (let i = 0; i < leading; ++i) {
+        const inputOffset = i * fullStride;
+        if (prefix) {
+            prefix.set(data.subarray(inputOffset, inputOffset + prefixStride), i * prefixStride);
+        }
+        if (suffix) {
+            suffix.set(
+                data.subarray(inputOffset + prefixStride, inputOffset + prefixStride + suffixStride),
+                i * suffixStride,
+            );
+        }
+    }
+
+    return { prefix, prefixLength, suffix, suffixLength };
+}
+
+async function packTensorWithResidualWindow(
+    tensor,
+    bits,
+    { residualLength = 0, seed = 1337, residualBits = 1, residual = false } = {},
+) {
+    const cpuTensor = tensor.location === 'gpu-buffer' ? await cloneTensorToCPU(tensor) : tensor;
+    const dims = cpuTensor.dims.slice();
+    const seqDim = dims.at(-2) ?? 0;
+
+    if (bits >= 8) {
+        return await packDenseTensor(cpuTensor);
+    }
+
+    if (residualLength > 0 && dims.length >= 3 && seqDim <= residualLength) {
+        return await packDenseTensor(cpuTensor);
+    }
+
+    if (residualLength <= 0 || dims.length < 3) {
+        return await packTurboQuantTensor(cpuTensor, bits, { seed, residualBits, residual });
+    }
+
+    const { prefix, prefixLength, suffix, suffixLength } = splitArrayBySequence(cpuTensor.data, dims, residualLength);
+    const prefixDims = dims.slice();
+    prefixDims[prefixDims.length - 2] = prefixLength;
+    const suffixDims = dims.slice();
+    suffixDims[suffixDims.length - 2] = suffixLength;
+
+    const prefixTensor = prefix ? new Tensor(cpuTensor.type, prefix, prefixDims) : null;
+    const suffixTensor = suffix ? new Tensor(cpuTensor.type, suffix, suffixDims) : null;
+
+    return {
+        format: 'hybrid',
+        dims,
+        originalType: cpuTensor.type,
+        compressed: prefixTensor
+            ? await packTurboQuantTensor(prefixTensor, bits, { seed, residualBits, residual })
+            : null,
+        tail: suffixTensor ? await packDenseTensor(suffixTensor) : null,
+    };
+}
+
 function unpackDenseTensor(packed) {
+    if (packed.format === 'hybrid') {
+        const tensors = [];
+        if (packed.compressed) {
+            tensors.push(unpackDenseTensor(packed.compressed));
+        }
+        if (packed.tail) {
+            tensors.push(unpackDenseTensor(packed.tail));
+        }
+        if (tensors.length === 1) {
+            return tensors[0];
+        }
+        return cat(tensors, -2);
+    }
+
     if (packed.format === 'quantized' || packed.format === 'turboquant') {
         return unpackQuantizedTensor(packed);
     }
@@ -376,6 +464,10 @@ function getPackedEntrySize(packed) {
             getTypedArrayByteLength(packed.residualNorms) +
             16
         );
+    }
+
+    if (packed.format === 'hybrid') {
+        return getPackedEntrySize(packed.compressed) + getPackedEntrySize(packed.tail);
     }
 
     return 0;
@@ -566,9 +658,9 @@ class _TurboQuantCache extends _PastKeyValues {
     constructor(config = {}) {
         super();
         this.config = {
-            b_key: 3,
-            b_value: 3,
-            residual_length: 128,
+            b_key: 4,
+            b_value: 8,
+            residual_length: 64,
             ...config,
         };
         this.entries = Object.create(null);
@@ -595,13 +687,12 @@ class _TurboQuantCache extends _PastKeyValues {
             const tensor = decoderResults[name];
             const bits = pastName.endsWith('.key') ? this.config.b_key : this.config.b_value;
             next.entries[pastName] =
-                bits >= 8
-                    ? await packDenseTensor(tensor)
-                    : await packTurboQuantTensor(tensor, bits, {
-                          seed: this.config.rotation_seed ?? 1337,
-                          residualBits: 1,
-                          residual: pastName.endsWith('.key'),
-                      });
+                await packTensorWithResidualWindow(tensor, bits, {
+                    residualLength: this.config.residual_length ?? 0,
+                    seed: this.config.rotation_seed ?? 1337,
+                    residualBits: 1,
+                    residual: pastName.endsWith('.key'),
+                });
 
             if (name.startsWith('present.') && tensor.dims.length >= 3) {
                 next.seq_length = tensor.dims.at(-2);

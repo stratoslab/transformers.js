@@ -5,6 +5,9 @@ const DEVICE = process.env.DEVICE ?? 'webgpu';
 const DTYPE = process.env.DTYPE ?? 'q4';
 const MAX_NEW_TOKENS = Number(process.env.MAX_NEW_TOKENS ?? 128);
 const RUNS = Number(process.env.RUNS ?? 3);
+const B_KEY = Number(process.env.B_KEY ?? 4);
+const B_VALUE = Number(process.env.B_VALUE ?? 8);
+const RESIDUAL_LENGTH = Number(process.env.RESIDUAL_LENGTH ?? 64);
 const PROMPT =
   process.env.PROMPT ??
   'Summarize how a Canton workflow assistant should review a proposed token transfer and list the main risk checks.';
@@ -50,6 +53,14 @@ async function runBenchmark(model, prompt, cacheImplementation) {
       do_sample: false,
       return_dict_in_generate: captureResult,
       cache_implementation: cacheImplementation,
+      cache_config:
+        cacheImplementation === 'turboquant'
+          ? {
+              b_key: B_KEY,
+              b_value: B_VALUE,
+              residual_length: RESIDUAL_LENGTH,
+            }
+          : undefined,
     });
     timings.push(performance.now() - started);
 
@@ -85,6 +96,7 @@ console.log(`Loading tokenizer: ${MODEL_ID}`);
 const tokenizer = await AutoTokenizer.from_pretrained(MODEL_ID);
 
 console.log(`Loading model: ${MODEL_ID} (dtype=${DTYPE}, device=${DEVICE})`);
+console.log(`TurboQuant config: b_key=${B_KEY}, b_value=${B_VALUE}, residual_length=${RESIDUAL_LENGTH}`);
 const model = await AutoModelForCausalLM.from_pretrained(MODEL_ID, {
   dtype: DTYPE,
   device: DEVICE,

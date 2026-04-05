@@ -201,13 +201,13 @@ The benchmark worker loads the forked `transformers.js` browser bundle directly,
 
 Five prompt categories exercise different text-generation characteristics:
 
-| ID | Label | Description | Max new tokens |
-|---|---|---|---:|
-| `risk-short` | Risk Summary | Short enterprise risk review | 48 |
-| `ops-checklist` | Operations Checklist | Structured compliance checklist | 72 |
-| `policy-compare` | Policy Comparison | Comparative reasoning task | 80 |
-| `long-context-1k` | Long Context 1x | Extended prompt, cache stress | 96 |
-| `long-context-2k` | Long Context 2x | Very long prompt, heavy cache pressure | 96 |
+| ID                | Label                | Description                            | Max tokens |
+|:------------------|:---------------------|:---------------------------------------|----------:|
+| `risk-short`      | Risk Summary         | Short enterprise risk review           |         48 |
+| `ops-checklist`   | Operations Checklist | Structured compliance checklist        |         72 |
+| `policy-compare`  | Policy Comparison    | Comparative reasoning task             |         80 |
+| `long-context-1k` | Long Context 1x      | Extended prompt, cache stress          |         96 |
+| `long-context-2k` | Long Context 2x      | Very long prompt, heavy cache pressure |         96 |
 
 The first three cases are short structured enterprise prompts. The latter two stress cache behavior under larger input sequence lengths.
 
@@ -215,11 +215,11 @@ The first three cases are short structured enterprise prompts. The latter two st
 
 Three TurboQuant operating points are evaluated, parameterized by key bit width $b_k$, value bit width $b_v$, and residual window length $T_r$:
 
-| Configuration | $b_k$ | $b_v$ | $T_r$ |
-|---|---:|---:|---:|
-| Safe Default | 4 | 8 | 64 |
-| Key Heavy | 3 | 8 | 64 |
-| Mid Compression | 4 | 8 | 48 |
+| Configuration   | $b_k$ | $b_v$ | $T_r$ |
+|:----------------|------:|------:|------:|
+| Safe Default    |     4 |     8 |    64 |
+| Key Heavy       |     3 |     8 |    64 |
+| Mid Compression |     4 |     8 |    48 |
 
 Each TurboQuant configuration is compared against a common dense-cache baseline (`dynamic`) under identical model, prompt, and generation settings.
 
@@ -239,14 +239,13 @@ Hardware configuration was not systematically recorded in the current experiment
 
 **Table 1** summarises performance averaged across all five benchmark cases.
 
-**Table 1: Aggregate performance by configuration**
+**Table 1: Aggregate performance by configuration (dense baseline: 1.000×, 18.5 TPS)**
 
-| Configuration | Avg. speed ratio | Avg. compression | Avg. prefix agreement | Avg. TPS (turbo) | Exact matches |
-|---|---:|---:|---:|---:|---:|
-| Safe Default | 0.538× | 1.290× | 83.7% | 10.0 | 0 / 5 |
-| Key Heavy | 0.573× | 1.328× | 77.8% | 10.1 | 0 / 5 |
-| Mid Compression | 0.495× | 1.336× | 69.9% | 9.1 | 0 / 5 |
-| Dense baseline | 1.000× | — | 100% | 18.5 | — |
+| Configuration   | Speed ratio | Compression | Prefix agr. | TPS (turbo) | Exact (n=5) |
+|:----------------|------------:|------------:|------------:|------------:|------------:|
+| Safe Default    |      0.538× |      1.290× |       83.7% |        10.0 |         0/5 |
+| Key Heavy       |      0.573× |      1.328× |       77.8% |        10.1 |         0/5 |
+| Mid Compression |      0.495× |      1.336× |       69.9% |         9.1 |         0/5 |
 
 All three configurations remain slower than the dense baseline. The best aggregate speed ratio is 0.573× (Key Heavy), meaning the compressed path takes roughly 1.75× longer end-to-end than the dense baseline on average. Average decode throughput across configurations is approximately 9–10 tokens/s, compared to 18.5 tokens/s for the dense path — roughly a halving of throughput. No configuration produces exact-match output on any of the five cases.
 
@@ -264,13 +263,13 @@ Figure 1 shows the speed-quality frontier for all 15 configuration–case pairs.
 
 **Table 2: Per-case best performance across configurations**
 
-| Case | Cache size (dense) | Best speed ratio (config) | Best compression (config) | Best prefix agreement (config) |
-|---|---:|---:|---:|---:|
-| Risk Summary | 1.5 MB | 0.807× (Key Heavy) | 1.18× (Mid) | 84.3% (Key Heavy) |
-| Operations Checklist | 2.0 MB | 0.695× (Key Heavy) | 1.25× (Mid) | 71.9% (Safe Default) |
-| Policy Comparison | 2.2 MB | 0.669× (Key Heavy) | 1.26× (Mid) | 73.2% (Safe Default) |
-| Long Context 1x | 23.1 MB | 0.370× (Key Heavy) | 1.55× (Key Heavy) | 93.0% (Key Heavy) |
-| Long Context 2x | 43.7 MB | 0.323× (Key Heavy) | 1.57× (Key Heavy) | 96.6% (Safe Default) |
+| Case                  | Cache (MB) | Best speed ratio  | Best compression  | Best prefix agr.     |
+|:----------------------|-----------:|:------------------|:------------------|:---------------------|
+| Risk Summary          |        1.5 | 0.807× (Key Heavy)| 1.18× (Mid)       | 84.3% (Key Heavy)    |
+| Operations Checklist  |        2.0 | 0.695× (Key Heavy)| 1.25× (Mid)       | 71.9% (Safe Default) |
+| Policy Comparison     |        2.2 | 0.669× (Key Heavy)| 1.26× (Mid)       | 73.2% (Safe Default) |
+| Long Context 1x       |       23.1 | 0.370× (Key Heavy)| 1.55× (Key Heavy) | 93.0% (Key Heavy)    |
+| Long Context 2x       |       43.7 | 0.323× (Key Heavy)| 1.57× (Key Heavy) | 96.6% (Safe Default) |
 
 Several patterns are visible. First, speed degrades as cache size grows: the best speed ratio for short prompts (0.807×) is over twice the best for long-context prompts (0.323×). Second, compression improves with cache size: the long-context cases achieve 1.5–1.57× compression while short cases reach only 1.1–1.26×. Third, prefix agreement is high for long-context cases (92–97%) but much lower and more variable for short structured tasks (36–84%). The worst prefix agreement in the entire sweep is Policy Comparison under Mid Compression (35.8%), which provides concrete evidence against strong quality-preservation claims in the current implementation.
 
@@ -282,19 +281,27 @@ Several patterns are visible. First, speed degrades as cache size grows: the bes
 
 ### 6.3 Decode throughput and TTFT
 
-**Table 3** reports decode throughput (TPS) and TTFT for each case.
+**Tables 3a and 3b** report decode throughput (TPS) and TTFT respectively for each case.
 
-**Table 3: Decode throughput (tokens/s) and TTFT (ms) by case and configuration**
+**Table 3a: Decode throughput (tokens/s) by case and configuration**
 
-| Case | Dyn TPS | SD TPS | KH TPS | MC TPS | Dyn TTFT | SD TTFT | KH TTFT | MC TTFT |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Risk Summary | 23.6 | 18.4 | 18.5 | 16.5 | 264 | 263 | 261 | 260 |
-| Ops Checklist | 22.3 | 15.1 | 15.2 | 13.8 | 258 | 261 | 267 | 265 |
-| Policy Comparison | 22.3 | 14.5 | 14.6 | 13.3 | 262 | 268 | 262 | 260 |
-| Long Context 1x | 14.4 | 1.41 | 1.53 | 1.31 | 9,469 | 8,778 | 14,132 | 15,469 |
-| Long Context 2x | 9.98 | 0.740 | 0.737 | 0.724 | 45,782 | 41,788 | 40,952 | 43,055 |
+| Case                  | Dynamic | Safe Default | Key Heavy | Mid Compression |
+|:----------------------|--------:|-------------:|----------:|----------------:|
+| Risk Summary          |    23.6 |         18.4 |      18.5 |            16.5 |
+| Operations Checklist  |    22.3 |         15.1 |      15.2 |            13.8 |
+| Policy Comparison     |    22.3 |         14.5 |      14.6 |            13.3 |
+| Long Context 1x       |    14.4 |         1.41 |      1.53 |            1.31 |
+| Long Context 2x       |    9.98 |        0.740 |     0.737 |           0.724 |
 
-*(SD = Safe Default, KH = Key Heavy, MC = Mid Compression)*
+**Table 3b: Time-to-first-token (ms) by case and configuration**
+
+| Case                  | Dynamic | Safe Default | Key Heavy | Mid Compression |
+|:----------------------|--------:|-------------:|----------:|----------------:|
+| Risk Summary          |     264 |          263 |       261 |             260 |
+| Operations Checklist  |     258 |          261 |       267 |             265 |
+| Policy Comparison     |     262 |          268 |       262 |             260 |
+| Long Context 1x       |   9,469 |        8,778 |    14,132 |          15,469 |
+| Long Context 2x       |  45,782 |       41,788 |    40,952 |          43,055 |
 
 The throughput collapse for long-context cases is stark. On Long Context 2x, Safe Default achieves 0.74 tokens/s versus 9.98 tokens/s for the dense baseline — a 13.5× throughput gap. Risk Summary, with its 1.5 MB cache, achieves 18.4 tokens/s versus 23.6 tokens/s for the baseline — a 1.28× gap. This roughly 10× difference in relative throughput between a small and large cache is consistent with per-step reconstruction overhead scaling with cache size (Section 7.2).
 
@@ -342,7 +349,7 @@ This is not a critique of TurboQuant as an algorithm. It is a description of wha
 
 ### 7.2 Quantitative evidence for the rematerialization bottleneck
 
-The TPS data in Table 3 provides direct quantitative support for the rematerialization-overhead hypothesis. For the Risk Summary case, the dense KV cache is approximately 1.5 MB. TurboQuant achieves 18.4 tokens/s versus 23.6 tokens/s for the baseline — a 1.28× throughput gap. For Long Context 2x, the dense KV cache is approximately 43.7 MB. TurboQuant achieves 0.74 tokens/s versus 9.98 tokens/s — a 13.5× throughput gap.
+The TPS data in Table 3a provides direct quantitative support for the rematerialization-overhead hypothesis. For the Risk Summary case, the dense KV cache is approximately 1.5 MB. TurboQuant achieves 18.4 tokens/s versus 23.6 tokens/s for the baseline — a 1.28× throughput gap. For Long Context 2x, the dense KV cache is approximately 43.7 MB. TurboQuant achieves 0.74 tokens/s versus 9.98 tokens/s — a 13.5× throughput gap.
 
 If reconstruction overhead were a fixed cost per decode step, the relative throughput gap would be roughly constant across context lengths. Instead, it scales by roughly a factor of 10 as the cache grows from 1.5 MB to 43.7 MB. This scaling is consistent with the materialization step taking time proportional to the number of cached tokens — a natural consequence of allocating, filling, and uploading a dense tensor whose size grows with $T$ at every decode step.
 

@@ -110,11 +110,13 @@ export class CausalLMOutputWithPast extends ModelOutput {
      * @param {Tensor} output.logits Prediction scores of the language modeling head (scores for each vocabulary token before softmax).
      * @param {Tensor} output.past_key_values Contains pre-computed hidden-states (key and values in the self-attention blocks)
      * that can be used (see `past_key_values` input) to speed up sequential decoding.
+     * @param {Object|null} [output.cache_stats] Optional cache statistics collected during generation.
      */
-    constructor({ logits, past_key_values }) {
+    constructor({ logits, past_key_values, cache_stats = null }) {
         super();
         this.logits = logits;
         this.past_key_values = past_key_values;
+        this.cache_stats = cache_stats;
     }
 }
 
@@ -126,14 +128,23 @@ export class Seq2SeqLMOutput extends ModelOutput {
      * @param {Tensor} output.encoder_outputs The output of the encoder in a sequence-to-sequence model.
      * @param {Tensor} [output.decoder_attentions] Attentions weights of the decoder, after the attention softmax, used to compute the weighted average in the self-attention heads.
      * @param {Tensor} [output.cross_attentions] Attentions weights of the decoder's cross-attention layer, after the attention softmax, used to compute the weighted average in the cross-attention heads.
+     * @param {Object|null} [output.cache_stats] Optional cache statistics collected during generation.
      */
-    constructor({ logits, past_key_values, encoder_outputs, decoder_attentions = null, cross_attentions = null }) {
+    constructor({
+        logits,
+        past_key_values,
+        encoder_outputs,
+        decoder_attentions = null,
+        cross_attentions = null,
+        cache_stats = null,
+    }) {
         super();
         this.logits = logits;
         this.past_key_values = past_key_values;
         this.encoder_outputs = encoder_outputs;
         this.decoder_attentions = decoder_attentions;
         this.cross_attentions = cross_attentions;
+        this.cache_stats = cache_stats;
     }
 }
 

@@ -1049,6 +1049,7 @@ export class PreTrainedModel extends Callable {
             model_inputs._cache_factory,
             true,
         );
+        const cache_stats = past_key_values?.getStats instanceof Function ? past_key_values.getStats() : null;
 
         // TODO: ensure all_input_ids is padded correctly...
         const sequences = new Tensor('int64', all_input_ids.flat(), [all_input_ids.length, all_input_ids[0].length]);
@@ -1057,6 +1058,7 @@ export class PreTrainedModel extends Callable {
             return {
                 sequences,
                 past_key_values,
+                cache_stats,
                 ...attentions,
                 ...return_dict_items,
                 // TODO:

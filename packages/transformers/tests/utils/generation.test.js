@@ -508,6 +508,27 @@ describe("PKV caching", () => {
       MAX_TEST_EXECUTION_TIME,
     );
 
+    it(
+      "returns cache stats when return_dict_in_generate=true",
+      async () => {
+        const inputs = tokenizer("cache stats");
+        const outputs = await model.generate({
+          ...inputs,
+          max_new_tokens: 2,
+          do_sample: false,
+          return_dict_in_generate: true,
+          cache_implementation: "turboquant",
+        });
+
+        expect(outputs.cache_stats).toBeTruthy();
+        expect(outputs.cache_stats.implementation).toEqual("turboquant");
+        expect(outputs.cache_stats.entries).toBeGreaterThan(0);
+        expect(outputs.cache_stats.seq_length).toBeGreaterThan(0);
+        expect(outputs.cache_stats.dense_bytes).toBeGreaterThan(0);
+      },
+      MAX_TEST_EXECUTION_TIME,
+    );
+
     afterAll(async () => {
       await model?.dispose();
     }, MAX_MODEL_DISPOSE_TIME);

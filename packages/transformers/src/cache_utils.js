@@ -430,6 +430,7 @@ class _DynamicCache extends _PastKeyValues {
      * @param {Record<string, Tensor>} [entries] Initial name→Tensor mappings.
      */
     constructor(entries) {
+        super();
         if (!entries) return;
         for (const key in entries) {
             if (key in this) {

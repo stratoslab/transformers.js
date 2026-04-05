@@ -22,3 +22,56 @@ For a full list of available settings, check out the [API Reference](./api/env).
 ### Convert your models to ONNX
 
 We recommend using [Optimum](https://github.com/huggingface/optimum-onnx) to convert your PyTorch models to ONNX in a single command. For the full list of supported architectures, check out the [Optimum documentation](https://huggingface.co/docs/optimum-onnx/onnx/overview).
+
+### Benchmark cache implementations
+
+If you want to benchmark generation caches, prefer the lower-level model API over `pipeline()`. This gives you direct access to `generate()` options like `cache_implementation`, `past_key_values`, and `cache_stats`.
+
+```javascript
+import { AutoModelForCausalLM, AutoTokenizer } from '@huggingface/transformers';
+
+const modelId = 'onnx-community/Qwen2.5-0.5B-Instruct';
+const tokenizer = await AutoTokenizer.from_pretrained(modelId);
+const model = await AutoModelForCausalLM.from_pretrained(modelId, {
+  dtype: 'q4',
+  device: 'webgpu',
+});
+
+const messages = [
+  { role: 'system', content: 'You are a helpful assistant.' },
+  { role: 'user', content: 'Tell me a funny joke.' },
+];
+
+const prompt = tokenizer.apply_chat_template(messages, {
+  tokenize: true,
+  add_generation_prompt: true,
+  return_dict: true,
+});
+
+const baseline = await model.generate({
+  ...prompt,
+  max_new_tokens: 128,
+  do_sample: false,
+  return_dict_in_generate: true,
+  cache_implementation: 'dynamic',
+});
+
+const turbo = await model.generate({
+  ...prompt,
+  max_new_tokens: 128,
+  do_sample: false,
+  return_dict_in_generate: true,
+  cache_implementation: 'turboquant',
+});
+
+console.log('baseline cache', baseline.cache_stats);
+console.log('turbo cache', turbo.cache_stats);
+```
+
+For repeated comparisons from the repo itself, use:
+
+```bash
+pnpm --dir packages/transformers benchmark:turboquant
+```
+
+You can override the defaults with environment variables such as `MODEL_ID`, `DEVICE`, `DTYPE`, `MAX_NEW_TOKENS`, `RUNS`, and `PROMPT`.

@@ -37,7 +37,7 @@ import { LogitsSampler } from '../generation/logits_sampler.js';
 import { DefaultProgressCallback, pick } from '../utils/core.js';
 import { ModelOutput } from './modeling_outputs.js';
 import { logger } from '../utils/logger.js';
-import { DynamicCache } from '../cache_utils.js';
+import { DynamicCache, TurboQuantCache, buildPastKeyValuesTensorMap } from '../cache_utils.js';
 import { get_model_files } from '../utils/model_registry/get_model_files.js';
 import { get_file_metadata } from '../utils/model_registry/get_file_metadata.js';
 import { MODEL_SESSION_CONFIG, MODEL_TYPES } from './session_config.js';
@@ -664,7 +664,13 @@ export class PreTrainedModel extends Callable {
      */
     _update_model_kwargs_for_generation({ generated_input_ids, outputs, model_inputs, is_encoder_decoder }) {
         // update past_key_values
-        model_inputs['past_key_values'] = this.getPastKeyValues(outputs, model_inputs.past_key_values);
+        model_inputs['past_key_values'] = this.getPastKeyValues(
+            outputs,
+            model_inputs.past_key_values,
+            false,
+            model_inputs._cache_factory,
+            true,
+        );
 
         // update inputs for next run
         model_inputs['input_ids'] = new Tensor('int64', generated_input_ids.flat(), [generated_input_ids.length, 1]);
@@ -854,6 +860,11 @@ export class PreTrainedModel extends Callable {
             model_kwargs: kwargs,
         });
 
+        const cacheFactory = this.getPastKeyValuesFactory(generation_config);
+        if (cacheFactory) {
+            model_inputs._cache_factory = cacheFactory;
+        }
+
         const is_encoder_decoder = this.config.is_encoder_decoder;
 
         // 4. Define other model kwargs
@@ -1031,7 +1042,13 @@ export class PreTrainedModel extends Callable {
         }
 
         // Retrieve and dispose all final past key values (including encoder attentions)
-        const past_key_values = this.getPastKeyValues(outputs, model_inputs.past_key_values, true);
+        const past_key_values = this.getPastKeyValues(
+            outputs,
+            model_inputs.past_key_values,
+            true,
+            model_inputs._cache_factory,
+            true,
+        );
 
         // TODO: ensure all_input_ids is padded correctly...
         const sequences = new Tensor('int64', all_input_ids.flat(), [all_input_ids.length, all_input_ids[0].length]);
@@ -1048,7 +1065,10 @@ export class PreTrainedModel extends Callable {
             };
         } else {
             // Dispose all remaining tensors
-            for (const tensor of Object.values(outputs)) {
+            for (const [name, tensor] of Object.entries(outputs)) {
+                if (past_key_values?.owns_decoder_results && name.startsWith('present')) {
+                    continue;
+                }
                 if (tensor.location === 'gpu-buffer') {
                     tensor.dispose();
                 }
@@ -1063,44 +1083,46 @@ export class PreTrainedModel extends Callable {
      * @param {Object} decoderResults The decoder results object.
      * @param {DynamicCache} pastKeyValues The previous past key values.
      * @param {boolean} [disposeEncoderPKVs=false] Whether to dispose encoder past key values.
+     * @param {(() => DynamicCache)|null} [cacheFactory=null] Factory used to create a custom cache after the first decoder step.
+     * @param {boolean} [disposeSourceDecoderResults=false] Whether cache ownership should dispose decoder `present.*` outputs.
      * @returns {DynamicCache} A new DynamicCache containing the updated past key values.
      */
-    getPastKeyValues(decoderResults, pastKeyValues, disposeEncoderPKVs = false) {
-        /** @type {Record<string, Tensor>} */
-        const pkvs = Object.create(null);
-
-        for (const name in decoderResults) {
-            if (name.startsWith('present')) {
-                const newName = name
-                    // Hybrid cache architecture
-                    .replace('present_ssm', 'past_ssm') // Mamba
-                    .replace('present_conv', 'past_conv') // LFM2
-                    .replace('present_recurrent', 'past_recurrent') // Qwen3.5
-
-                    // Standard cache architecture
-                    .replace('present', 'past_key_values');
-                const is_encoder_pkv = name.includes('encoder');
-                if (is_encoder_pkv && pastKeyValues) {
-                    // Optimization introduced by optimum to reuse past key values.
-                    // So, we just replace the constant outputs (`decoderResults[name]`) with the previous past key values.
-                    // https://github.com/huggingface/optimum/blob/0bf2c05fb7e1182b52d21b703cfc95fd9e4ea3dc/optimum/onnxruntime/base.py#L677-L704
-                    pkvs[newName] = pastKeyValues[newName];
-                } else {
-                    // decoder or using first encoder PKVs
-                    pkvs[newName] = decoderResults[name];
-                }
-
-                if (pastKeyValues && (!is_encoder_pkv || disposeEncoderPKVs)) {
-                    // - Always dispose decoder PKVs
-                    // - Only dispose encoder past key values when requested (after generation)
-                    const t = pastKeyValues[newName];
-                    if (t.location === 'gpu-buffer') {
-                        t.dispose();
-                    }
-                }
-            }
+    getPastKeyValues(
+        decoderResults,
+        pastKeyValues,
+        disposeEncoderPKVs = false,
+        cacheFactory = null,
+        disposeSourceDecoderResults = false,
+    ) {
+        if (pastKeyValues?.update instanceof Function) {
+            return pastKeyValues.update(decoderResults, { disposeEncoderPKVs, disposeSourceDecoderResults });
         }
-        return new DynamicCache(pkvs);
+        if (cacheFactory) {
+            return cacheFactory().update(decoderResults, { disposeEncoderPKVs, disposeSourceDecoderResults });
+        }
+        return new DynamicCache(buildPastKeyValuesTensorMap(decoderResults, pastKeyValues, disposeEncoderPKVs));
+    }
+
+    /**
+     * Resolve the cache factory for the current generation run.
+     * @param {GenerationConfig} generation_config
+     * @returns {(() => DynamicCache)|null}
+     */
+    getPastKeyValuesFactory(generation_config) {
+        if (!generation_config.use_cache) {
+            return null;
+        }
+
+        switch (generation_config.cache_implementation) {
+            case null:
+            case undefined:
+            case 'dynamic':
+                return null;
+            case 'turboquant':
+                return () => new TurboQuantCache(generation_config.cache_config ?? {});
+            default:
+                throw new Error(`Unknown cache_implementation: ${generation_config.cache_implementation}`);
+        }
     }
 
     /**
@@ -1133,7 +1155,11 @@ export class PreTrainedModel extends Callable {
      */
     addPastKeyValues(decoderFeeds, pastKeyValues) {
         if (pastKeyValues) {
-            Object.assign(decoderFeeds, pastKeyValues);
+            const materialized =
+                pastKeyValues.materialize instanceof Function ? pastKeyValues.materialize(decoderFeeds) : pastKeyValues;
+            const entries = materialized?.entries ?? materialized;
+            Object.assign(decoderFeeds, entries);
+            return materialized?.cleanup ?? null;
         } else {
             const session = this.sessions['decoder_model_merged'] ?? this.sessions['model'];
             const batch_size = (decoderFeeds[this.main_input_name] ?? decoderFeeds.attention_mask)?.dims?.[0] ?? 1;
@@ -1146,6 +1172,7 @@ export class PreTrainedModel extends Callable {
                 decoderFeeds[name] = new Tensor(dtype, new cls(size), shapes[name]);
             }
         }
+        return null;
     }
 
     /**
@@ -1288,11 +1315,15 @@ export async function decoder_forward(self, model_inputs, is_encoder_decoder = f
     }
 
     // Unpack the `past_key_values` object into model inputs
-    self.addPastKeyValues(new_model_inputs, past_key_values);
+    const cacheCleanup = self.addPastKeyValues(new_model_inputs, past_key_values);
 
     // Select only the inputs that are needed for the current session
     const fixed = pick(new_model_inputs, session.inputNames);
-    return await sessionRun(session, fixed);
+    try {
+        return await sessionRun(session, fixed);
+    } finally {
+        await cacheCleanup?.();
+    }
 }
 
 /**

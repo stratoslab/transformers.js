@@ -96,6 +96,22 @@ export class GenerationConfig {
      */
     use_cache = true;
 
+    /**
+     * Cache backend to use during generation.
+     * `dynamic` keeps the default dense cache.
+     * `turboquant` routes generation through the experimental TurboQuant cache scaffold.
+     * @type {"dynamic"|"turboquant"}
+     * @default "dynamic"
+     */
+    cache_implementation = 'dynamic';
+
+    /**
+     * Additional configuration for custom cache implementations.
+     * @type {Object|null}
+     * @default null
+     */
+    cache_config = null;
+
     // Parameters for manipulation of the model output logits
     /**
      * The value used to modulate the next token probabilities.

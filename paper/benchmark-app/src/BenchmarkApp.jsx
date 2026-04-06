@@ -1,9 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  BENCHMARK_CASES,
-  DEFAULT_SWEEP_CONFIGS,
-  DEFAULT_SYNTHETIC_CONFIG,
-} from "./benchmarkCases";
+import { BENCHMARK_CASES, DEFAULT_SWEEP_CONFIGS } from "./benchmarkCases";
 
 function downloadJson(filename, payload) {
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
@@ -22,6 +18,7 @@ function useBenchmarkWorker() {
     workerRef.current = new Worker(new URL("./benchmarkWorker.js", import.meta.url), {
       type: "module",
     });
+    workerRef.current.postMessage({ type: "ping" });
     return () => workerRef.current?.terminate();
   }, []);
 
@@ -150,85 +147,29 @@ function CaseCard({ entry }) {
           </tbody>
         </table>
       </div>
+
+      {entry.sweepResults.map((sweep) => (
+        <details className="result-details" key={`${entry.case.id}-${sweep.cacheConfig.id}`}>
+          <summary>{sweep.cacheConfig.label} outputs</summary>
+          <div className="detail-grid">
+            <div>
+              <strong>Dynamic</strong>
+              <pre>{sweep.dynamic.output}</pre>
+            </div>
+            <div>
+              <strong>TurboQuant</strong>
+              <pre>{sweep.turboquant.output}</pre>
+            </div>
+          </div>
+        </details>
+      ))}
     </section>
-  );
-}
-
-function SyntheticRowsTable({ resultSet }) {
-  const materialize = (resultSet.rows ?? []).filter((row) => row.benchmark === "materialize_only");
-  const sweep = (resultSet.rows ?? []).filter((row) => row.benchmark === "cache_sweep");
-
-  return (
-    <div className="benchmark-results benchmark-results-stacked">
-      <section className="benchmark-card table-card">
-        <h2>Materialize-only</h2>
-        <div className="table-wrap">
-          <table className="benchmark-table">
-            <thead>
-              <tr>
-                <th>Backend</th>
-                <th>Seq</th>
-                <th>Avg Materialize</th>
-                <th>Median</th>
-                <th>Compression</th>
-                <th>Blocks</th>
-              </tr>
-            </thead>
-            <tbody>
-              {materialize.map((row) => (
-                <tr key={`${row.backend}-${row.seq_len}`}>
-                  <td>{row.backend}</td>
-                  <td>{row.seq_len}</td>
-                  <td>{compareValue(row.avg_materialize_ms, " ms")}</td>
-                  <td>{compareValue(row.median_materialize_ms, " ms")}</td>
-                  <td>{compareValue(row.compression_ratio, "x")}</td>
-                  <td>{row.compressed_blocks ?? "n/a"}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <section className="benchmark-card table-card">
-        <h2>Cache Sweep</h2>
-        <div className="table-wrap">
-          <table className="benchmark-table">
-            <thead>
-              <tr>
-                <th>Backend</th>
-                <th>Seq</th>
-                <th>Prefill Update</th>
-                <th>Prefill Materialize</th>
-                <th>Decode Update/step</th>
-                <th>Decode Materialize/step</th>
-                <th>Compression</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sweep.map((row) => (
-                <tr key={`${row.backend}-${row.seq_len}`}>
-                  <td>{row.backend}</td>
-                  <td>{row.seq_len}</td>
-                  <td>{compareValue(row.prefill_update_ms, " ms")}</td>
-                  <td>{compareValue(row.prefill_materialize_ms, " ms")}</td>
-                  <td>{compareValue(row.decode_update_per_step_ms, " ms")}</td>
-                  <td>{compareValue(row.decode_materialize_per_step_ms, " ms")}</td>
-                  <td>{compareValue(row.compression_ratio, "x")}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </div>
   );
 }
 
 export default function BenchmarkApp() {
   const workerRef = useBenchmarkWorker();
 
-  const [mode, setMode] = useState("browser");
   const [modelId, setModelId] = useState("onnx-community/gemma-4-E2B-it-ONNX");
   const [runs, setRuns] = useState(2);
   const [status, setStatus] = useState("Idle");
@@ -240,7 +181,6 @@ export default function BenchmarkApp() {
     Object.fromEntries(BENCHMARK_CASES.map((entry) => [entry.id, true])),
   );
   const [sweepText, setSweepText] = useState(JSON.stringify(DEFAULT_SWEEP_CONFIGS, null, 2));
-  const [syntheticConfig, setSyntheticConfig] = useState(DEFAULT_SYNTHETIC_CONFIG);
 
   useEffect(() => {
     const worker = workerRef.current;
@@ -303,8 +243,30 @@ export default function BenchmarkApp() {
       }
     };
 
+    const onError = (event) => {
+      setLoading(false);
+      setStatus("Worker failed");
+      const message = event.message || "Unknown worker error";
+      setError(message);
+      setEvents((current) =>
+        [{ id: crypto.randomUUID(), text: `worker error: ${message}` }, ...current].slice(0, 12),
+      );
+    };
+
+    const onMessageError = () => {
+      setLoading(false);
+      setStatus("Worker message error");
+      setError("Worker message could not be deserialized.");
+    };
+
     worker.addEventListener("message", onMessage);
-    return () => worker.removeEventListener("message", onMessage);
+    worker.addEventListener("error", onError);
+    worker.addEventListener("messageerror", onMessageError);
+    return () => {
+      worker.removeEventListener("message", onMessage);
+      worker.removeEventListener("error", onError);
+      worker.removeEventListener("messageerror", onMessageError);
+    };
   }, [workerRef]);
 
   const selectedCases = useMemo(
@@ -321,29 +283,6 @@ export default function BenchmarkApp() {
     }
   }, [sweepText]);
 
-  const parsedSyntheticConfigs = useMemo(() => {
-    try {
-      const parsed = JSON.parse(syntheticConfig.turboConfigs);
-      if (!Array.isArray(parsed)) return null;
-      const seqLens = syntheticConfig.seqLens
-        .split(",")
-        .map((value) => Number(value.trim()))
-        .filter(Number.isFinite);
-      return {
-        seqLens,
-        decodeSteps: Number(syntheticConfig.decodeSteps),
-        layers: Number(syntheticConfig.layers),
-        numKvHeads: Number(syntheticConfig.numKvHeads),
-        headDim: Number(syntheticConfig.headDim),
-        runs: Number(syntheticConfig.runs),
-        warmupRuns: Number(syntheticConfig.warmupRuns),
-        turboConfigs: parsed,
-      };
-    } catch {
-      return null;
-    }
-  }, [syntheticConfig]);
-
   const requestLoad = () => {
     setError("");
     setLoading(true);
@@ -354,14 +293,14 @@ export default function BenchmarkApp() {
     });
   };
 
-  const runBrowserBenchmark = () => {
+  const runBenchmark = () => {
     if (!parsedSweepConfigs || selectedCases.length === 0) {
       setError("Select at least one case and provide valid JSON sweep configs.");
       return;
     }
     setError("");
     setLoading(true);
-    setStatus("Starting browser benchmark suite...");
+    setStatus("Starting benchmark suite...");
     setResultSet(null);
     workerRef.current?.postMessage({
       type: "benchmark",
@@ -374,218 +313,74 @@ export default function BenchmarkApp() {
     });
   };
 
-  const runSyntheticBenchmark = () => {
-    if (!parsedSyntheticConfigs) {
-      setError("Synthetic benchmark config is invalid.");
-      return;
-    }
-    setError("");
-    setLoading(true);
-    setStatus("Starting synthetic cache benchmarks...");
-    setResultSet(null);
-    workerRef.current?.postMessage({
-      type: "synthetic",
-      data: parsedSyntheticConfigs,
-    });
-  };
-
   return (
     <div className="benchmark-shell">
       <div className="benchmark-hero">
-        <p className="eyebrow">Paper Harness</p>
-        <h1>TurboQuant Gemma 4 Benchmark App</h1>
+        <p className="eyebrow">Chrome Benchmark</p>
+        <h1>TurboQuant Paper Harness</h1>
         <p className="subhead">
-          Browser suite for Gemma 4 WebGPU plus synthetic cache benchmarks that isolate
-          update and rematerialization costs. Everything needed for the paper now lives in
-          this repo.
+          Runs a reproducible case suite in a browser worker, sweeps multiple TurboQuant
+          configurations, and reports latency, TTFT, compression, decode throughput, and
+          output agreement against the dynamic baseline.
         </p>
-      </div>
-
-      <div className="benchmark-mode-toggle">
-        <button
-          className={mode === "browser" ? "primary-button compact" : "glass-button"}
-          onClick={() => setMode("browser")}
-        >
-          Browser Suite
-        </button>
-        <button
-          className={mode === "synthetic" ? "primary-button compact" : "glass-button"}
-          onClick={() => setMode("synthetic")}
-        >
-          Synthetic Cache
-        </button>
       </div>
 
       <div className="benchmark-grid">
         <section className="benchmark-card controls-card">
-          {mode === "browser" ? (
-            <>
-              <label>
-                <span>Model</span>
-                <input value={modelId} onChange={(event) => setModelId(event.target.value)} />
-              </label>
-              <div className="control-row two-up">
-                <label>
-                  <span>Runs per point</span>
-                  <input
-                    type="number"
-                    min="1"
-                    value={runs}
-                    onChange={(event) => setRuns(event.target.value)}
-                  />
-                </label>
-              </div>
+          <label>
+            <span>Model</span>
+            <input value={modelId} onChange={(event) => setModelId(event.target.value)} />
+          </label>
+          <div className="control-row two-up">
+            <label>
+              <span>Runs per point</span>
+              <input
+                type="number"
+                min="1"
+                value={runs}
+                onChange={(event) => setRuns(event.target.value)}
+              />
+            </label>
+          </div>
 
-              <div className="case-picker">
-                <h2>Benchmark Cases</h2>
-                {BENCHMARK_CASES.map((entry) => (
-                  <label className="check-row" key={entry.id}>
-                    <input
-                      type="checkbox"
-                      checked={Boolean(caseSelection[entry.id])}
-                      onChange={(event) =>
-                        setCaseSelection((current) => ({
-                          ...current,
-                          [entry.id]: event.target.checked,
-                        }))
-                      }
-                    />
-                    <span>
-                      <strong>{entry.label}</strong>
-                      <small>{entry.description}</small>
-                    </span>
-                  </label>
-                ))}
-              </div>
-
-              <label>
-                <span>Sweep Config JSON</span>
-                <textarea
-                  rows={12}
-                  value={sweepText}
-                  onChange={(event) => setSweepText(event.target.value)}
-                />
-              </label>
-
-              <div className="benchmark-actions">
-                <button className="glass-button" onClick={requestLoad} disabled={loading}>
-                  Load Model
-                </button>
-                <button className="primary-button" onClick={runBrowserBenchmark} disabled={loading}>
-                  {loading ? "Running..." : "Run Browser Suite"}
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="control-row">
-                <label>
-                  <span>Seq Lens</span>
-                  <input
-                    value={syntheticConfig.seqLens}
-                    onChange={(event) =>
-                      setSyntheticConfig((current) => ({
-                        ...current,
-                        seqLens: event.target.value,
-                      }))
-                    }
-                  />
-                </label>
-                <label>
-                  <span>Decode Steps</span>
-                  <input
-                    type="number"
-                    min="1"
-                    value={syntheticConfig.decodeSteps}
-                    onChange={(event) =>
-                      setSyntheticConfig((current) => ({
-                        ...current,
-                        decodeSteps: event.target.value,
-                      }))
-                    }
-                  />
-                </label>
-                <label>
-                  <span>Runs</span>
-                  <input
-                    type="number"
-                    min="1"
-                    value={syntheticConfig.runs}
-                    onChange={(event) =>
-                      setSyntheticConfig((current) => ({
-                        ...current,
-                        runs: event.target.value,
-                      }))
-                    }
-                  />
-                </label>
-              </div>
-              <div className="control-row">
-                <label>
-                  <span>Warmup Runs</span>
-                  <input
-                    type="number"
-                    min="0"
-                    value={syntheticConfig.warmupRuns}
-                    onChange={(event) =>
-                      setSyntheticConfig((current) => ({
-                        ...current,
-                        warmupRuns: event.target.value,
-                      }))
-                    }
-                  />
-                </label>
-                <label>
-                  <span>Layers</span>
-                  <input
-                    type="number"
-                    min="1"
-                    value={syntheticConfig.layers}
-                    onChange={(event) =>
-                      setSyntheticConfig((current) => ({
-                        ...current,
-                        layers: event.target.value,
-                      }))
-                    }
-                  />
-                </label>
-                <label>
-                  <span>KV Heads</span>
-                  <input
-                    type="number"
-                    min="1"
-                    value={syntheticConfig.numKvHeads}
-                    onChange={(event) =>
-                      setSyntheticConfig((current) => ({
-                        ...current,
-                        numKvHeads: event.target.value,
-                      }))
-                    }
-                  />
-                </label>
-              </div>
-              <label>
-                <span>Turbo Config JSON</span>
-                <textarea
-                  rows={14}
-                  value={syntheticConfig.turboConfigs}
+          <div className="case-picker">
+            <h2>Benchmark Cases</h2>
+            {BENCHMARK_CASES.map((entry) => (
+              <label className="check-row" key={entry.id}>
+                <input
+                  type="checkbox"
+                  checked={Boolean(caseSelection[entry.id])}
                   onChange={(event) =>
-                    setSyntheticConfig((current) => ({
+                    setCaseSelection((current) => ({
                       ...current,
-                      turboConfigs: event.target.value,
+                      [entry.id]: event.target.checked,
                     }))
                   }
                 />
+                <span>
+                  <strong>{entry.label}</strong>
+                  <small>{entry.description}</small>
+                </span>
               </label>
-              <div className="benchmark-actions">
-                <button className="primary-button" onClick={runSyntheticBenchmark} disabled={loading}>
-                  {loading ? "Running..." : "Run Synthetic Benchmarks"}
-                </button>
-              </div>
-            </>
-          )}
+            ))}
+          </div>
+
+          <label>
+            <span>Sweep Config JSON</span>
+            <textarea
+              rows={12}
+              value={sweepText}
+              onChange={(event) => setSweepText(event.target.value)}
+            />
+          </label>
 
           <div className="benchmark-actions">
+            <button className="glass-button" onClick={requestLoad} disabled={loading}>
+              Load Model
+            </button>
+            <button className="primary-button" onClick={runBenchmark} disabled={loading}>
+              {loading ? "Running..." : "Run Suite"}
+            </button>
             <button
               className="glass-button"
               onClick={() => resultSet && downloadJson("turboquant-benchmark.json", resultSet)}
@@ -609,12 +404,12 @@ export default function BenchmarkApp() {
             ))}
           </div>
           <p className="meta-line">
-            Open this app in Chrome or Chromium with WebGPU enabled for the Gemma 4 browser suite.
+            Open this page in Chrome or Chromium with WebGPU enabled.
           </p>
         </section>
       </div>
 
-      {resultSet?.kind === "browser_suite" ? (
+      {resultSet ? (
         <>
           <SummaryTable resultSet={resultSet} />
           <div className="benchmark-results benchmark-results-stacked">
@@ -624,8 +419,6 @@ export default function BenchmarkApp() {
           </div>
         </>
       ) : null}
-
-      {resultSet?.kind === "synthetic_cache" ? <SyntheticRowsTable resultSet={resultSet} /> : null}
     </div>
   );
 }

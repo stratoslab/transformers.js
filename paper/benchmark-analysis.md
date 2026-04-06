@@ -1,10 +1,10 @@
 # TurboQuant Benchmark Analysis
 
-Source data: [turboquant-benchmark.json](./turboquant-benchmark.json)
+Source data: [Chrome Benchmarkv2.txt](./Chrome%20Benchmarkv2.txt)
 
 ## Scope
 
-This analysis summarizes the Chrome WebGPU benchmark sweep for:
+This analysis summarizes the latest Chrome WebGPU benchmark sweep for:
 
 - Model: `onnx-community/gemma-4-E2B-it-ONNX`
 - Runs per point: `2`
@@ -25,161 +25,178 @@ Metrics reported:
 
 ## Main findings
 
-### 1. Current TurboQuant variants are slower than baseline in every tested condition
+### 1. The current result is no longer uniformly negative on latency
 
 Average speed ratios by config:
 
-- `Safe Default`: `0.538x`
-- `Mid Compression`: `0.495x`
-- `Key Heavy`: `0.573x`
+- `Safe Default`: `1.054x`
+- `Mid Compression`: `1.077x`
+- `Key Heavy`: `1.039x`
 
 Interpretation:
 
-- A value below `1.0x` means TurboQuant is slower than the dynamic baseline.
-- None of the tested operating points improved latency.
-- `Key Heavy` is the least bad configuration on average, but it is still materially slower.
+- A value above `1.0x` means TurboQuant is faster than the dynamic baseline on average across the five prompt cases.
+- This does **not** mean TurboQuant is faster everywhere.
+- The sweep shows a context-length crossover:
+  - all three short cases are still slower than baseline (`0.731x` to `0.942x`)
+  - `Long Context 2x` is faster for all three configs (`1.702x` to `2.143x`)
+  - `Long Context 1x` is faster only for `Safe Default` (`1.093x`) and slower for the other two configs
 
-### 2. Compression gains are modest, not paper-strong
+The correct reading is:
+
+- **TurboQuant is slower when cache pressure is low**
+- **TurboQuant becomes competitive or faster once the context is large enough**
+
+### 2. Compression is strongly context-dependent, not uniformly positive
 
 Average compression ratios by config:
 
-- `Safe Default`: `1.290x`
-- `Mid Compression`: `1.336x`
-- `Key Heavy`: `1.328x`
+- `Safe Default`: `0.967x`
+- `Mid Compression`: `1.044x`
+- `Key Heavy`: `0.992x`
 
 Best observed compression point:
 
-- `Long Context 2x` + `Key Heavy`: `1.568x`
+- `Long Context 2x` + `Key Heavy`: `1.512x`
+
+Worst observed compression point:
+
+- `Risk Summary` + all configs: `0.667x`
 
 Interpretation:
 
-- The current implementation does not produce a dramatic KV-cache reduction.
-- Gains are real but small relative to the overhead being introduced.
+- On short prompts, the packed representation can be larger than dense.
+- Compression only pays once the cache grows enough for the fixed packing overhead to amortize.
+- The long-context cases are where the method becomes meaningfully compression-positive:
+  - `Long Context 1x`: `1.389x` to `1.447x`
+  - `Long Context 2x`: `1.446x` to `1.512x`
 
-### 3. Output quality is directionally preserved on long contexts, but not exact
+### 3. Quality is much stronger than in the earlier benchmark run
 
 Average prefix agreement by config:
 
-- `Safe Default`: `83.712%`
-- `Mid Compression`: `69.892%`
-- `Key Heavy`: `77.784%`
+- `Safe Default`: `100.000%`
+- `Mid Compression`: `95.277%`
+- `Key Heavy`: `97.950%`
 
 Exact matches:
 
-- `0 / 5` for every config
-
-Best observed prefix agreement:
-
-- `Long Context 2x` + `Safe Default`: `96.644%`
+- `Safe Default`: `5 / 5`
+- `Mid Compression`: `3 / 5`
+- `Key Heavy`: `3 / 5`
 
 Worst observed prefix agreement:
 
-- `Policy Comparison` + `Mid Compression`: `35.786%`
+- `Policy Comparison` + `Mid Compression`: `77.759%`
 
 Interpretation:
 
-- Long-context benchmark cases retain high textual overlap with baseline.
-- Shorter structured reasoning and comparison prompts are much more fragile.
-- Current results are not stable enough to support a strong “no quality loss” claim.
+- `Safe Default` now matches the dense baseline exactly on every case in this sweep.
+- `Key Heavy` preserves exact output on all three short cases, but drifts on the two long-context cases.
+- `Mid Compression` is still the least stable setting, but even its weakest case is materially stronger than in the earlier run.
 
 ## Per-case summary
 
 ### Risk Summary
 
-- `Safe Default`: speed `0.801x`, compression `1.099x`, prefix `84.1%`
-- `Mid Compression`: speed `0.726x`, compression `1.180x`, prefix `78.9%`
-- `Key Heavy`: speed `0.807x`, compression `1.109x`, prefix `84.3%`
+- `Safe Default`: speed `0.942x`, compression `0.667x`, prefix `100.0%`
+- `Mid Compression`: speed `0.889x`, compression `0.667x`, prefix `100.0%`
+- `Key Heavy`: speed `0.886x`, compression `0.667x`, prefix `100.0%`
 
 Takeaway:
 
-- Quality is acceptable-ish for this short task, but the compression benefit is too small to justify the slowdown.
+- TurboQuant loses on both speed and compression for this small-cache case.
+- There is no quality problem here; the issue is purely that the cache is too small for packing to pay off.
 
 ### Operations Checklist
 
-- `Safe Default`: speed `0.691x`, compression `1.180x`, prefix `71.9%`
-- `Mid Compression`: speed `0.637x`, compression `1.249x`, prefix `45.6%`
-- `Key Heavy`: speed `0.695x`, compression `1.200x`, prefix `60.3%`
+- `Safe Default`: speed `0.779x`, compression `0.667x`, prefix `100.0%`
+- `Mid Compression`: speed `0.756x`, compression `0.868x`, prefix `100.0%`
+- `Key Heavy`: speed `0.731x`, compression `0.667x`, prefix `100.0%`
 
 Takeaway:
 
-- Formatting-heavy checklist output is sensitive to compression.
-- `Mid Compression` is especially unstable here.
+- This is still a short-case loss for TurboQuant.
+- `Mid Compression` is the only setting that avoids outright cache expansion here, but it remains slower than baseline.
 
 ### Policy Comparison
 
-- `Safe Default`: speed `0.664x`, compression `1.197x`, prefix `73.2%`
-- `Mid Compression`: speed `0.614x`, compression `1.264x`, prefix `35.8%`
-- `Key Heavy`: speed `0.669x`, compression `1.219x`, prefix `54.7%`
+- `Safe Default`: speed `0.752x`, compression `0.667x`, prefix `100.0%`
+- `Mid Compression`: speed `0.776x`, compression `0.851x`, prefix `77.8%`
+- `Key Heavy`: speed `0.743x`, compression `0.667x`, prefix `100.0%`
 
 Takeaway:
 
-- Comparative reasoning is currently one of the weakest areas.
-- This case is the clearest evidence against claiming broad quality preservation.
+- The short comparative-reasoning case still favors the dense baseline on latency.
+- `Mid Compression` again trades away quality without gaining enough speed or compression to justify it.
 
 ### Long Context 1x
 
-- `Safe Default`: speed `0.210x`, compression `1.479x`, prefix `92.7%`
-- `Mid Compression`: speed `0.181x`, compression `1.488x`, prefix `92.7%`
-- `Key Heavy`: speed `0.370x`, compression `1.545x`, prefix `93.0%`
+- `Safe Default`: speed `1.093x`, compression `1.389x`, prefix `100.0%`
+- `Mid Compression`: speed `0.820x`, compression `1.389x`, prefix `100.0%`
+- `Key Heavy`: speed `0.762x`, compression `1.447x`, prefix `93.0%`
 
 Takeaway:
 
-- Output overlap is high on long context.
-- However, latency collapses badly, which likely reflects reconstruction overhead dominating any KV savings.
+- This is the first crossover point.
+- `Safe Default` is slightly faster than baseline while also compressing the cache and preserving exact output.
+- The more aggressive settings do not yet pay here.
 
 ### Long Context 2x
 
-- `Safe Default`: speed `0.323x`, compression `1.496x`, prefix `96.6%`
-- `Mid Compression`: speed `0.315x`, compression `1.501x`, prefix `96.5%`
-- `Key Heavy`: speed `0.323x`, compression `1.568x`, prefix `96.6%`
+- `Safe Default`: speed `1.702x`, compression `1.446x`, prefix `100.0%`
+- `Mid Compression`: speed `2.143x`, compression `1.446x`, prefix `98.6%`
+- `Key Heavy`: speed `2.075x`, compression `1.512x`, prefix `96.7%`
 
 Takeaway:
 
-- This is the strongest quality case in the current dataset.
-- It is also the clearest proof that the implementation is not yet performance-competitive.
+- This is the strongest positive result in the current dataset.
+- All three TurboQuant settings beat the dense baseline on end-to-end latency.
+- `Mid Compression` is the fastest here, while `Safe Default` is the cleanest quality-preserving point.
 
 ## Defensible claims right now
 
 The current results support the following claims:
 
-- An experimental TurboQuant-style KV-cache path can run inside browser-based Gemma 4 inference on Chrome WebGPU.
-- The implementation can reduce packed KV size relative to dense caching.
-- Larger prompt contexts show higher textual agreement with baseline than shorter structured reasoning tasks.
-- The current implementation does not improve latency and is slower than the baseline across all tested cases.
+- A TurboQuant-inspired KV-cache path can run end-to-end inside browser-based Gemma 4 inference on Chrome WebGPU.
+- The current implementation shows a **context-length crossover** rather than a uniform slowdown.
+- TurboQuant is slower on short prompts with small caches, but can become faster on sufficiently long prompts.
+- Cache compression is only beneficial once the cache is large enough; on short prompts the packed representation can exceed dense size.
+- `Safe Default` is now a strong quality-preserving operating point in this sweep, with `5/5` exact matches.
+- The benchmark still supports the systems claim that runtime behavior is dominated by the interaction between cache size and rematerialization overhead.
 
-## Claims that are not supported yet
+## Claims that are still not supported
 
-The current data does **not** support the following claims:
+The current data still does **not** support the following claims:
 
-- “TurboQuant improves end-to-end latency in the browser”
-- “TurboQuant achieves substantial memory reduction”
-- “TurboQuant preserves output quality”
-- “TurboQuant is production-ready for Gemma 4 WebGPU inference”
+- “TurboQuant is faster than the dense baseline in general”  
+  It is faster only once the prompt is long enough.
+- “TurboQuant always reduces KV memory footprint”  
+  It does not on short prompts.
+- “The implementation is production-ready for browser Gemma 4 inference”  
+  The run budget is still only `n=2`, and the evidence is from one Chrome/WebGPU environment.
+- “The current implementation is a faithful reproduction of the published TurboQuant system”  
+  It remains a TurboQuant-inspired browser approximation.
 
-## Recommendation for a paper
+## Recommendation for the paper
 
-If this work is written up now, it should be framed as:
+The paper should now be framed as a **context-dependent tradeoff study**, not as a purely negative result.
 
-- a browser implementation study,
-- a negative or mixed empirical result,
-- or an engineering report on the tradeoff frontier rather than a breakthrough result.
+The most defensible summary is:
 
-If the goal is a stronger research-style paper, the next required steps are:
-
-1. Improve the codec so compression materially exceeds `~1.5x` without major quality drift.
-2. Reduce dense reconstruction overhead, which currently destroys speed.
-3. Expand the sweep to more operating points and more runs per point.
-4. Add additional quality metrics beyond prefix agreement, such as semantic similarity and task-specific rubric scoring.
-5. Benchmark across multiple browsers, GPUs, and machines.
+- short-context browser inference still favors `DynamicCache`
+- long-context browser inference can favor `TurboQuantCache`
+- the crossover is driven by cache size and runtime overhead, not by a uniform algorithmic win
 
 ## Most promising current operating point
 
 If one configuration must be used as the reference point for further work:
 
-- `Safe Default` is the best quality-oriented setting overall.
+- `Safe Default` is the best general-purpose setting overall
 
 Reason:
 
-- It has the strongest average prefix agreement (`83.712%`) across the sweep.
-- Its long-context behavior is especially strong (`92.7%` to `96.6%` prefix agreement).
-- It is still too slow, but it is the cleanest quality-preserving baseline for future optimization work.
+- It is the only configuration with `5/5` exact matches.
+- It is the cleanest quality-preserving point on both long-context cases.
+- It is already faster than baseline on `Long Context 1x` and strongly faster on `Long Context 2x`.
+- It avoids the extra output drift of the more aggressive settings.

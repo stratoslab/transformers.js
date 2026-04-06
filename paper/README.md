@@ -13,11 +13,13 @@ This directory collects the current source material for the TurboQuant-in-browse
 - [preprints-submission-notes.md](./preprints-submission-notes.md)
   - Recommended Preprints.org subject area, article type guidance, and author-instruction summary tailored to this project.
 - [benchmark-analysis.md](./benchmark-analysis.md)
-  - Analysis of the current Chrome WebGPU benchmark sweep on `onnx-community/gemma-4-E2B-it-ONNX`.
+  - Analysis of the latest Chrome WebGPU benchmark sweep on `onnx-community/gemma-4-E2B-it-ONNX`.
 - [turboquant-benchmark.json](./turboquant-benchmark.json)
-  - Exported benchmark data from the browser harness.
+  - Earlier exported benchmark data from the browser harness.
 - [Chrome Benchmark.txt](./Chrome%20Benchmark.txt)
-  - Human-readable benchmark output capture.
+  - Earlier human-readable benchmark output capture.
+- [Chrome Benchmarkv2.txt](./Chrome%20Benchmarkv2.txt)
+  - Latest human-readable benchmark output capture used for the current manuscript updates.
 - [figures](./figures)
   - Generated PNG figures for the current benchmark set.
 - [tables](./tables)
@@ -33,9 +35,10 @@ This directory collects the current source material for the TurboQuant-in-browse
 
 ## Current status
 
-The current evidence supports a browser-side engineering study, not a strong positive performance paper.
+The current evidence supports a context-dependent systems paper rather than a simple all-positive or all-negative performance claim.
 
 - The TurboQuant-style cache path runs in Chrome WebGPU with Gemma 4.
-- The current implementation reduces packed KV size relative to dense caching.
-- The current implementation is slower than the dense baseline in the tested Chrome/WebGPU sweep.
-- The current implementation is not yet faithful enough to support a "no quality loss" claim.
+- The latest Chrome sweep shows a context-length crossover: TurboQuant is slower on short prompts, but faster on the longest prompt and slightly faster on `Long Context 1x` under `Safe Default`.
+- Compression is not uniformly positive: short prompts can expand the cache, while long-context cases reach roughly `1.39x` to `1.51x` compression.
+- `Safe Default` is currently the strongest quality-preserving setting in the latest sweep, with `5/5` exact matches.
+- The implementation is still TurboQuant-inspired rather than a faithful reproduction of the published accelerator-side system.

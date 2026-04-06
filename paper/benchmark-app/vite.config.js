@@ -13,7 +13,6 @@ export default defineConfig({
         __dirname,
         "../../packages/transformers/dist/transformers.web.js",
       ),
-      "@transformers-src": path.resolve(__dirname, "../../packages/transformers/src"),
     },
   },
 });

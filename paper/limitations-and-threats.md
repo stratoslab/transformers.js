@@ -28,9 +28,9 @@ Each of the 15 configuration–case pairs (3 configurations × 5 cases) was benc
 - outlier runs cannot be identified or excluded;
 - the reported mean could differ substantially from the true mean with only one additional run.
 
-Some observed differences — in particular the TTFT variations on Long Context 1x (Safe Default: 8,778 ms, Key Heavy: 14,132 ms) and the absolute latency on long-context cases — may partly reflect run-to-run variance rather than stable systematic effects. The TPS and speed-ratio differences between configurations on short cases are also small enough that n=2 is insufficient to confirm them as statistically reliable.
+Some observed differences — in particular the TTFT variations on Long Context 1x (Safe Default: 17,264 ms, Key Heavy: 29,782 ms) and the absolute latency crossover on long-context cases — may partly reflect run-to-run variance rather than stable systematic effects. The speed-ratio differences between configurations on short cases are also small enough that n=2 is insufficient to confirm them as statistically reliable.
 
-**Implication for strong claims:** The per-case and per-configuration results in this paper should be treated as directional observations, not precise measurements. The aggregate patterns (all configurations slower than baseline, throughput collapse at large cache sizes) are robust because they are consistent across all 15 points. Individual cell values are not.
+**Implication for strong claims:** The per-case and per-configuration results in this paper should be treated as directional observations, not precise measurements. The aggregate pattern in the latest run is a context-length crossover: short cases remain worse, while the largest-cache case becomes better. Individual cell values should not be over-interpreted without a larger run budget.
 
 **Recommended fix:** Future benchmark runs should use a minimum of 5–10 runs per configuration. For a more complete study, a bootstrap resampling analysis over repeated runs would provide uncertainty estimates.
 
@@ -60,7 +60,7 @@ The primary quality metric is **prefix agreement**, defined as the length of the
 - A low score may unfairly penalize an output that is semantically equivalent but expressed with different word choices or structure.
 - It captures surface-form agreement with the dense baseline, not agreement with ground truth. The dense baseline is not validated as correct.
 
-No semantic evaluation metrics (ROUGE, BERTScore, exact match on structured outputs, task-specific rubrics, or human preference ratings) were computed. The 0/5 exact-match rate confirms that no configuration exactly reproduces the baseline, but this is an extremely strict threshold.
+No semantic evaluation metrics (ROUGE, BERTScore, exact match on structured outputs, task-specific rubrics, or human preference ratings) were computed. The latest sweep improves the exact-match picture materially (`5/5` for Safe Default and `3/5` for the other two settings), but exact match is still an extremely strict threshold and should not be treated as a substitute for task-level evaluation.
 
 **Implication:** Quality results in this paper should be understood as "degree of agreement with the dense baseline output," not as a measurement of task-level quality or semantic preservation.
 

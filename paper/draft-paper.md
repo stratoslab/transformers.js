@@ -12,7 +12,7 @@ Stratos Lab — kwang@stratoslab.xyz
 
 KV-cache growth is a central bottleneck for long-context autoregressive inference, and the challenge intensifies in browser environments where GPU memory budgets, CPU-to-GPU transfer overhead, and runtime abstraction costs impose additional constraints. TurboQuant has been proposed as a training-free low-bit vector quantization method capable of compressing LLM KV caches to approximately 3 bits on H100-class hardware. This paper investigates whether a TurboQuant-inspired compression strategy can operate usefully within a browser inference stack built on `transformers.js` and Chrome WebGPU.
 
-We implement an experimental `TurboQuantCache` in a fork of `transformers.js`, exposing it through the standard generation API, and benchmark it against a dense baseline on `onnx-community/gemma-4-E2B-it-ONNX` across five prompt categories and three quantizer configurations. The compressed path achieves 1.29–1.34× average KV-cache size reduction and 69.9–83.7% average prefix agreement with dense-baseline outputs. However, it is slower than the dense baseline under all tested conditions, with average end-to-end speed ratios of 0.50–0.57× and average decode throughput falling from 18.5 tokens/s to approximately 9–10 tokens/s. On the longest tested context, end-to-end decode throughput collapses to 0.74 tokens/s versus 9.98 tokens/s for the dense baseline, a 13.5× TPS gap that scales with KV-cache size. No configuration produces an exact-match output on any test case.
+We implement an experimental `TurboQuantCache` in a fork of `transformers.js`, exposing it through the standard generation API, and benchmark it against a dense baseline on `onnx-community/gemma-4-E2B-it-ONNX` across five prompt categories and three quantizer configurations. The updated Chrome WebGPU sweep shows a context-length crossover rather than a uniform slowdown. TurboQuant remains slower on all three short prompts, but it becomes faster on `Long Context 2x` for all tested configurations and slightly faster on `Long Context 1x` under `Safe Default`. Compression is likewise context-dependent: short prompts can expand the cache (`0.667x` to `0.868x`), while the long-context cases reach `1.389x` to `1.512x` compression. Quality is materially stronger than in the earlier run, with `Safe Default` matching the dense baseline on all five cases and the other two settings matching on three of five cases.
 
 The central systems finding is that a cache-wrapper-only implementation — in which compressed KV state must be fully rematerialized into dense tensors before each ONNX decoder call — is not sufficient to achieve a latency benefit in this stack. The paper contributes a working `transformers.js` fork with a pluggable cache abstraction, a deterministic browser benchmark harness for Gemma 4 on Chrome WebGPU, and a quantitative characterisation of how rematerialization overhead scales with cache size.
 
@@ -30,13 +30,13 @@ TurboQuant [1, 2] has been presented as a training-free solution to KV-cache pre
 
 This paper addresses a narrower question: *can a TurboQuant-inspired cache path be integrated into `transformers.js`-based browser inference, and what does it cost?* Our goal is not to reproduce TurboQuant's accelerator-side claims. Instead, we build and evaluate a browser-realistic implementation — one that must work within the constraints of an ONNX model interface that expects dense past-key-value tensors — and report what happens.
 
-The main result is negative on latency and mixed on quality. The implementation runs end-to-end in Chrome WebGPU, achieves real but modest KV-cache compression, and reveals a clear systems bottleneck: the per-step cost of rematerializing dense tensors from a compressed store scales roughly with the size of the KV cache and, at large context lengths, dominates the decode budget entirely.
+The main result is mixed on latency and stronger on quality than in the earlier run. The implementation runs end-to-end in Chrome WebGPU and reveals a context-dependent systems bottleneck: short prompts do not amortize the extra cache machinery, while long prompts can. The crossover pattern is consistent with the cost of handling compressed state and rematerializing dense tensors interacting directly with cache size.
 
 Our contributions are:
 
 1. **A `transformers.js` fork** that adds a pluggable cache abstraction (`PastKeyValues`) and an experimental `TurboQuantCache` with low-bit packed storage, optional rotation preprocessing, key residual correction, and a dense residual window (Section 3).
 2. **A browser benchmark harness** for Gemma 4 on Chrome WebGPU that reports end-to-end latency, time-to-first-token (TTFT), decode throughput, packed and dense KV-cache byte counts, exact match, and prefix agreement between dense-cache and compressed-cache outputs (Section 5).
-3. **An empirical analysis** demonstrating that the dominant performance cost in the current design is per-step dense rematerialization whose overhead scales with cached sequence length, and that this cost is not offset by the compression gains at any tested operating point (Sections 6–7).
+3. **An empirical analysis** demonstrating that the dominant performance behavior in the current design is cache-size dependent: the compressed path loses on short prompts, but crosses over and becomes faster once context length is large enough, with the strongest gain on `Long Context 2x` (Sections 6–7).
 
 ---
 
@@ -69,7 +69,7 @@ This creates a fundamental tension for any cache compression scheme implemented 
 - CPU-to-GPU transfer of the reconstructed tensors;
 - GPU-to-CPU transfer of the `present.*` outputs.
 
-Each of these costs scales with the size of the KV cache. Whether compression savings outweigh these overheads depends on how large the cache is relative to the reconstruction cost at a given sequence length. The results in Section 6 show that, at the context lengths tested, they do not.
+Each of these costs scales with the size of the KV cache. Whether compression savings outweigh these overheads depends on how large the cache is relative to the reconstruction cost at a given sequence length. The results in Section 6 show a crossover: they do not for the short prompt cases, but they can for the largest tested contexts.
 
 The ONNX Runtime GenAI configuration reference [7] documents `past_present_share_buffer` as a generation-oriented optimization that allows key-value state to be shared across steps without repeated allocation. This is not the path used in the current work, but it is a relevant reference point for the GPU-resident cache designs discussed in Section 9.
 
@@ -239,21 +239,21 @@ Hardware configuration was not systematically recorded in the current experiment
 
 **Table 1** summarises performance averaged across all five benchmark cases.
 
-**Table 1: Aggregate performance by configuration (dense baseline: 1.000×, 18.5 TPS)**
+**Table 1: Aggregate performance by configuration (latest Chrome WebGPU sweep)**
 
 | Configuration   | Speed ratio | Compression | Prefix agr. | TPS (turbo) | Exact (n=5) |
 |:----------------|------------:|------------:|------------:|------------:|------------:|
-| Safe Default    |      0.538× |      1.290× |       83.7% |        10.0 |         0/5 |
-| Key Heavy       |      0.573× |      1.328× |       77.8% |        10.1 |         0/5 |
-| Mid Compression |      0.495× |      1.336× |       69.9% |         9.1 |         0/5 |
+| Safe Default    |      1.054× |      0.967× |      100.0% |        10.3 |         5/5 |
+| Key Heavy       |      1.039× |      0.992× |       98.0% |        10.1 |         3/5 |
+| Mid Compression |      1.077× |      1.044× |       95.3% |        10.3 |         3/5 |
 
-All three configurations remain slower than the dense baseline. The best aggregate speed ratio is 0.573× (Key Heavy), meaning the compressed path takes roughly 1.75× longer end-to-end than the dense baseline on average. Average decode throughput across configurations is approximately 9–10 tokens/s, compared to 18.5 tokens/s for the dense path — roughly a halving of throughput. No configuration produces exact-match output on any of the five cases.
+At the aggregate level, the updated sweep no longer supports an "always slower" interpretation. All three configurations are now slightly above `1.0x` average speed ratio. However, this is a simple mean over cases, not a universal latency win. The underlying pattern is a crossover: TurboQuant is slower on the three short cases, but faster on the longest context, and slightly faster on `Long Context 1x` only under `Safe Default`.
 
-Compression gains are real but modest. The 1.29–1.34× average ratios are substantially below the sub-4-bit compression levels reported for TurboQuant in accelerator-side evaluations.
+Compression is also more nuanced than in the earlier draft. Average compression is near break-even overall because short prompts can expand the packed representation. The long-context cases remain genuinely compression-positive, reaching `1.389x` to `1.512x`, while the short cases sit between `0.667x` and `0.868x`.
 
-Figure 1 shows the speed-quality frontier for all 15 configuration–case pairs. No point lies in the upper-right quadrant (faster than baseline and high quality), confirming that the compressed path does not dominate the dense baseline on either dimension in the current implementation.
+Figure 1 should now be interpreted as a frontier with a visible crossover rather than a uniformly negative cluster.
 
-**Figure 1:** Speed-quality frontier for all benchmark points. The x-axis is the end-to-end speed ratio relative to the dense baseline (values > 1 would be faster); the y-axis is prefix agreement with the baseline output. The dashed vertical line at x = 1.0 marks the dense baseline speed. All 15 points fall below x = 1.0. Points in the upper-left cluster are long-context cases (high agreement, severe slowdown); points toward the lower-right are short structured cases (faster but more output divergence).
+**Figure 1:** Speed-quality frontier for all benchmark points. The x-axis is the end-to-end speed ratio relative to the dense baseline (values > 1 are faster); the y-axis is prefix agreement with the baseline output. The dashed vertical line at x = 1.0 marks the dense baseline speed. In the latest sweep, the short structured cases stay to the left of this line, while the long-context cases move to or beyond it, showing that the payoff from the compressed path depends on cache size.
 
 ![Speed-quality frontier](figures/speed_quality_frontier.png)
 
@@ -265,53 +265,51 @@ Figure 1 shows the speed-quality frontier for all 15 configuration–case pairs.
 
 | Case                  | Cache (MB) | Best speed ratio  | Best compression  | Best prefix agr.     |
 |:----------------------|-----------:|:------------------|:------------------|:---------------------|
-| Risk Summary          |        1.5 | 0.807× (Key Heavy)| 1.18× (Mid)       | 84.3% (Key Heavy)    |
-| Operations Checklist  |        2.0 | 0.695× (Key Heavy)| 1.25× (Mid)       | 71.9% (Safe Default) |
-| Policy Comparison     |        2.2 | 0.669× (Key Heavy)| 1.26× (Mid)       | 73.2% (Safe Default) |
-| Long Context 1x       |       23.1 | 0.370× (Key Heavy)| 1.55× (Key Heavy) | 93.0% (Key Heavy)    |
-| Long Context 2x       |       43.7 | 0.323× (Key Heavy)| 1.57× (Key Heavy) | 96.6% (Safe Default) |
+| Risk Summary          |        1.5 | 0.942× (Safe Default) | 0.667× (all)      | 100.0% (all)         |
+| Operations Checklist  |        2.0 | 0.779× (Safe Default) | 0.868× (Mid)      | 100.0% (all)         |
+| Policy Comparison     |        2.2 | 0.776× (Mid)          | 0.851× (Mid)      | 100.0% (Safe/Key)    |
+| Long Context 1x       |       23.1 | 1.093× (Safe Default) | 1.447× (Key Heavy)| 100.0% (Safe/Mid)    |
+| Long Context 2x       |       43.7 | 2.143× (Mid)          | 1.512× (Key Heavy)| 100.0% (Safe Default)|
 
-Several patterns are visible. First, speed degrades as cache size grows: the best speed ratio for short prompts (0.807×) is over twice the best for long-context prompts (0.323×). Second, compression improves with cache size: the long-context cases achieve 1.5–1.57× compression while short cases reach only 1.1–1.26×. Third, prefix agreement is high for long-context cases (92–97%) but much lower and more variable for short structured tasks (36–84%). The worst prefix agreement in the entire sweep is Policy Comparison under Mid Compression (35.8%), which provides concrete evidence against strong quality-preservation claims in the current implementation.
+Several patterns are visible. First, speed now improves with cache size rather than degrading monotonically: all three short prompts remain below `1.0x`, but the longest case rises to `1.702x`–`2.143x`. Second, compression becomes positive only once the cache is large enough; the short prompts do not amortize the packing overhead. Third, quality is substantially stronger than in the earlier run: `Safe Default` is exact on all five cases, and the worst prefix agreement in the entire sweep is now `77.759%` (`Policy Comparison` under `Mid Compression`).
 
 **Figure 5** shows the absolute latency comparison across cases and configurations.
 
 ![Latency comparison](figures/latency_bars.png)
 
-**Figure 5:** End-to-end generation latency (ms) by case and configuration. Note the dramatic latency increase for the long-context cases under TurboQuant. Long Context 2x takes approximately 171–176 seconds under TurboQuant versus 55 seconds under the dense baseline.
+**Figure 5:** End-to-end generation latency (ms) by case and configuration. The latest sweep reverses the earlier long-context pattern: short cases remain slower under TurboQuant, but `Long Context 2x` falls to roughly `53.9–67.8 s` under TurboQuant versus `115.5 s` for the dense baseline.
 
 ### 6.3 Decode throughput and TTFT
 
-**Tables 3a and 3b** report decode throughput (TPS) and TTFT respectively for each case.
+**Table 3a: TurboQuant decode throughput (tokens/s) by case and configuration**
 
-**Table 3a: Decode throughput (tokens/s) by case and configuration**
+| Case                  | Safe Default | Key Heavy | Mid Compression |
+|:----------------------|-------------:|----------:|----------------:|
+| Risk Summary          |       16.025 |    14.946 |          15.100 |
+| Operations Checklist  |       13.103 |    12.259 |          12.691 |
+| Policy Comparison     |       12.535 |    12.416 |          12.970 |
+| Long Context 1x       |        5.199 |     4.470 |           4.527 |
+| Long Context 2x       |        4.456 |     6.225 |           6.391 |
 
-| Case                  | Dynamic | Safe Default | Key Heavy | Mid Compression |
-|:----------------------|--------:|-------------:|----------:|----------------:|
-| Risk Summary          |    23.6 |         18.4 |      18.5 |            16.5 |
-| Operations Checklist  |    22.3 |         15.1 |      15.2 |            13.8 |
-| Policy Comparison     |    22.3 |         14.5 |      14.6 |            13.3 |
-| Long Context 1x       |    14.4 |         1.41 |      1.53 |            1.31 |
-| Long Context 2x       |    9.98 |        0.740 |     0.737 |           0.724 |
+**Table 3b: TurboQuant TTFT (ms) by case and configuration**
 
-**Table 3b: Time-to-first-token (ms) by case and configuration**
+| Case                  | Safe Default | Key Heavy | Mid Compression |
+|:----------------------|-------------:|----------:|----------------:|
+| Risk Summary          |        334.0 |     329.9 |           351.4 |
+| Operations Checklist  |        348.5 |     350.3 |           348.6 |
+| Policy Comparison     |        341.8 |     356.4 |           345.7 |
+| Long Context 1x       |     17,263.9 |  29,782.4 |        26,416.1 |
+| Long Context 2x       |     46,292.4 |  40,230.3 |        38,868.1 |
 
-| Case                  | Dynamic | Safe Default | Key Heavy | Mid Compression |
-|:----------------------|--------:|-------------:|----------:|----------------:|
-| Risk Summary          |     264 |          263 |       261 |             260 |
-| Operations Checklist  |     258 |          261 |       267 |             265 |
-| Policy Comparison     |     262 |          268 |       262 |             260 |
-| Long Context 1x       |   9,469 |        8,778 |    14,132 |          15,469 |
-| Long Context 2x       |  45,782 |       41,788 |    40,952 |          43,055 |
+The decode-throughput pattern mirrors the latency crossover. On short cases, TurboQuant decode remains in the `12.3`–`16.0 tok/s` range and does not beat the dense baseline on end-to-end latency. On `Long Context 2x`, throughput rises to `4.46`–`6.39 tok/s`, which aligns with the end-to-end crossover in Table 2. The stronger long-context performance is therefore not a TTFT artifact alone.
 
-The throughput collapse for long-context cases is stark. On Long Context 2x, Safe Default achieves 0.74 tokens/s versus 9.98 tokens/s for the dense baseline — a 13.5× throughput gap. Risk Summary, with its 1.5 MB cache, achieves 18.4 tokens/s versus 23.6 tokens/s for the baseline — a 1.28× gap. This roughly 10× difference in relative throughput between a small and large cache is consistent with per-step reconstruction overhead scaling with cache size (Section 7.2).
-
-TTFT for the three short-context cases (≤2.2 MB cache) is nearly identical across all configurations (260–268 ms), as expected: there is no KV state to read before the first decode step, so the cache implementation does not affect TTFT. For the long-context cases, TTFT behavior is more variable. On Long Context 2x, all three TurboQuant configurations have slightly lower TTFT (41–43 seconds) than the dense baseline (45.8 seconds), possibly reflecting reduced initial memory pressure in the compressed path. On Long Context 1x, Safe Default TTFT is slightly lower than the baseline while Mid Compression and Key Heavy are substantially higher. Given the small run budget (n=2), we treat these TTFT differences as observations rather than robust findings.
+TTFT for the three short-context cases is tightly clustered around `330`–`356 ms`, as expected: there is little prior KV state to read before the first decode step. For the long-context cases, TTFT becomes a large part of total latency, but `Long Context 2x` is notably better under TurboQuant than in the earlier benchmark cycle, especially for the more aggressive settings. Given the small run budget (`n=2`), we treat these TTFT differences as directional rather than definitive.
 
 **Figure 6** shows TTFT and TPS comparisons across cases and configurations.
 
 ![TTFT and TPS comparison](figures/ttft_tps_bars.png)
 
-**Figure 6:** Time-to-first-token (top) and decode throughput (bottom) for all cases and configurations. The throughput collapse for long-context prompts is the dominant visual feature.
+**Figure 6:** Time-to-first-token (top) and decode throughput (bottom) for all cases and configurations. In the latest sweep, the dominant feature is a crossover: the short cases still favor the dense baseline, but the longest prompt moves into a regime where TurboQuant wins on end-to-end latency.
 
 ### 6.4 Heatmap summaries
 
@@ -325,17 +323,17 @@ Figures 2–4 show the three primary metrics as heatmaps over the case × config
 
 ![Prefix agreement heatmap](figures/heatmap_prefix_agreement.png)
 
-**Figure 4:** Speed ratio heatmap (case × configuration). All cells are below 1.0 (all configurations are slower than the baseline). The long-context cases are the darkest, reflecting the most severe slowdown.
+**Figure 4:** Speed ratio heatmap (case × configuration). The short cases remain below `1.0`, but the long-context cases move to or above `1.0`, showing that the compressed path can become favorable when cache size is large enough.
 
 ![Speed ratio heatmap](figures/heatmap_speed_ratio.png)
 
 ### 6.5 Configuration-level observations
 
-**Safe Default** (b_k=4, b_v=8, T_r=64) is the best quality-oriented configuration, with the highest average prefix agreement (83.7%) and a reasonable average speed ratio (0.538×). It should be the reference point for future optimisation work.
+**Safe Default** (`b_k=4`, `b_v=8`, `T_r=64`) is now the best quality-oriented configuration by a wide margin. It is exact on all five cases, has `100%` average prefix agreement, and is already faster than baseline on both long-context prompts. It should be the main reference point for future optimisation work.
 
-**Key Heavy** (b_k=3, b_v=8, T_r=64) has the best aggregate speed ratio (0.573×) and the highest compression on long-context cases (up to 1.57×). It sacrifices some quality (77.8% average prefix agreement) relative to Safe Default.
+**Key Heavy** (`b_k=3`, `b_v=8`, `T_r=64`) achieves the strongest single-case compression (`1.512x` on `Long Context 2x`) and strong long-context speedups, but it gives up some quality on the long prompts.
 
-**Mid Compression** (b_k=4, b_v=8, T_r=48) is the weakest configuration. It has the worst average speed ratio (0.495×), the worst average prefix agreement (69.9%), and only marginally better average compression (1.336×) than Safe Default (1.290×). Across three of five prompt cases, Mid Compression is simultaneously slower than Safe Default and delivers worse quality — a strictly dominated outcome on those cases. This operating point should not be recommended as a default.
+**Mid Compression** (`b_k=4`, `b_v=8`, `T_r=48`) is no longer uniformly dominated. It has the best aggregate speed ratio (`1.077x`) and the fastest `Long Context 2x` point (`2.143x`), but it also produces the weakest quality result in the sweep (`77.759%` prefix agreement on `Policy Comparison`). This makes it a high-performance but less conservative operating point rather than a safe default.
 
 ---
 
@@ -349,15 +347,15 @@ This is not a critique of TurboQuant as an algorithm. It is a description of wha
 
 ### 7.2 Quantitative evidence for the rematerialization bottleneck
 
-The TPS data in Table 3a provides direct quantitative support for the rematerialization-overhead hypothesis. For the Risk Summary case, the dense KV cache is approximately 1.5 MB. TurboQuant achieves 18.4 tokens/s versus 23.6 tokens/s for the baseline — a 1.28× throughput gap. For Long Context 2x, the dense KV cache is approximately 43.7 MB. TurboQuant achieves 0.74 tokens/s versus 9.98 tokens/s — a 13.5× throughput gap.
+The updated sweep still supports a cache-size-driven interpretation, but the result is now a crossover rather than a collapse. For the short cases, speed ratios remain below `1.0` and compression is at or below break-even. For `Long Context 2x`, speed ratios rise to `1.702x`–`2.143x` and compression to `1.446x`–`1.512x`. This indicates that the same browser runtime overheads are still present, but they are no longer always dominant once the cache is large enough.
 
-If reconstruction overhead were a fixed cost per decode step, the relative throughput gap would be roughly constant across context lengths. Instead, it scales by roughly a factor of 10 as the cache grows from 1.5 MB to 43.7 MB. This scaling is consistent with the materialization step taking time proportional to the number of cached tokens — a natural consequence of allocating, filling, and uploading a dense tensor whose size grows with $T$ at every decode step.
+If the extra cache machinery were purely harmful, the speed ratio would remain below `1.0` as context grew. The fact that the sign flips at large cache sizes suggests a more nuanced balance: short prompts are dominated by packing, unpacking, and runtime overhead, while large caches can finally amortize that cost. In other words, the browser boundary still matters, but the latest run shows it is not an absolute barrier to end-to-end wins.
 
-The TTFT pattern provides a complementary observation. For long-context cases, TTFT is at most weakly affected by the compression path (and is slightly lower for some TurboQuant configurations on Long Context 2x). This suggests the performance cost is concentrated in the repeated per-step decode phase rather than in the initial prefill pass, further supporting the per-step rematerialization explanation.
+The TTFT pattern provides a complementary observation. For short-context cases, TTFT is nearly identical across settings. For `Long Context 2x`, TTFT is materially lower for the faster TurboQuant settings than in the earlier benchmark cycle. This suggests that the long-context advantage is not just a decode-only artifact and that reduced memory pressure may already be helping at the prefill boundary.
 
 ### 7.3 The configuration landscape
 
-The three tested configurations expose an instructive pattern. Safe Default offers the best quality-speed balance. Key Heavy trades quality for slightly better speed and meaningfully better compression on large caches. Mid Compression, despite having the smallest residual window, is slower than both alternatives and produces worse quality than Safe Default. This combination suggests that the residual window length parameter (T_r) interacts with pack-and-unpack overhead in a non-monotone way: reducing T_r does not linearly reduce reconstruction time but does increase output divergence. Future configuration design should explore this parameter more carefully.
+The three tested configurations expose an instructive pattern. Safe Default offers the cleanest quality-speed balance and is the obvious reference configuration. Key Heavy trades some output stability for stronger long-context compression. Mid Compression is no longer simply the weakest point; instead, it behaves like an aggressive operating point that gives the best aggregate speed in this sweep and the strongest `Long Context 2x` latency win, but at the cost of the worst observed quality result. This suggests that the residual-window parameter (`T_r`) interacts with both amortization and output drift in a non-monotone way. Future configuration design should therefore treat `T_r` as a crossover-control parameter, not just a compression knob.
 
 ### 7.4 What the implementation establishes
 
@@ -379,7 +377,7 @@ Third, and most importantly, it identifies the dominant next bottleneck with exp
 
 **Single environment.** All experiments were conducted in Chrome WebGPU on a single machine. The hardware GPU model was not recorded, and no cross-browser or cross-GPU benchmarking was performed. Results are specific to this execution environment. Performance on other adapters, browsers, or hardware may differ materially.
 
-**Metric scope.** Prefix agreement is a lightweight textual proxy for output quality. It captures character-level divergence from the dense-baseline output but does not measure semantic correctness, task-level accuracy, or perplexity. Compressed outputs may score well on prefix agreement while still being practically inferior, or score poorly on prefix agreement while remaining task-useful. The 0/5 exact-match rate confirms that no configuration exactly reproduces the baseline output, but neither exact match nor prefix agreement can substitute for task-specific evaluation.
+**Metric scope.** Prefix agreement is a lightweight textual proxy for output quality. It captures character-level divergence from the dense-baseline output but does not measure semantic correctness, task-level accuracy, or perplexity. Compressed outputs may score well on prefix agreement while still being practically inferior, or score poorly on prefix agreement while remaining task-useful. The latest sweep is encouraging — `Safe Default` is exact on all five cases, and the other two settings match on three of five — but neither exact match nor prefix agreement can substitute for task-specific evaluation.
 
 **Quality evaluation is against the dense baseline, not ground truth.** The benchmark measures agreement between the compressed path and the dense-cache path. Neither is validated against ground-truth task labels or human evaluation. A quality drop relative to the dense baseline does not necessarily imply poor absolute quality; conversely, high prefix agreement does not guarantee good task performance.
 
@@ -415,21 +413,23 @@ The results in this paper suggest that the most impactful near-term improvements
 
 ## 10. Conclusion
 
-We have presented an experimental browser implementation of a TurboQuant-inspired KV-cache compression path for `transformers.js` and evaluated it on Gemma 4 in Chrome WebGPU across five prompt categories and three quantizer configurations. The main result is negative on latency and mixed on quality: the compressed path achieves 1.29–1.34× average KV-cache reduction but runs at 0.50–0.57× the end-to-end speed of the dense baseline. Decode throughput drops from 18.5 to approximately 10 tokens/s on average, and collapses to 0.74 tokens/s on the largest tested context. No configuration produces exact-match output.
+We have presented an experimental browser implementation of a TurboQuant-inspired KV-cache compression path for `transformers.js` and evaluated it on Gemma 4 in Chrome WebGPU across five prompt categories and three quantizer configurations. The updated result is not a simple negative. Instead, it shows a context-length crossover: the compressed path remains worse on short prompts, but it becomes faster on the largest tested context and slightly faster on `Long Context 1x` under `Safe Default`. Compression follows the same pattern, ranging from short-case cache expansion to `1.512x` compression on `Long Context 2x`. `Safe Default` is the strongest quality-preserving setting in the current sweep, with `5/5` exact matches.
 
-The practical contribution of this work is not a new state-of-the-art browser inference result. It is a clear experimental baseline that narrows the engineering problem: browser-side KV compression is bottlenecked by per-step dense rematerialization, whose overhead scales with cache size and dominates at long context lengths. Fixing this — by keeping compressed KV state GPU-resident and eliminating the full reconstruct-on-every-step pattern — is a concrete, achievable next step that the current implementation and benchmark harness are positioned to evaluate.
+The practical contribution of this work is therefore more precise than either a pure success claim or a pure failure claim. It identifies a browser operating regime in which KV compression begins to pay off, while still showing that the result is highly sensitive to cache size, configuration choice, and runtime overhead. The next engineering step remains the same: reduce the browser boundary cost by keeping compressed KV state GPU-resident and eliminating the full reconstruct-on-every-step pattern where possible.
 
 ---
 
 ## Data Availability
 
-The benchmark data, derived summary tables, and figures for this study are provided in the paper package:
+The benchmark data, text captures, derived summary tables, and figures for this study are provided in the paper package:
 
-- `turboquant-benchmark.json` — full benchmark export from the browser harness
-- `tables/benchmark_rows.csv` — row-level per-case-per-configuration results
-- `tables/config_summary.csv` — aggregate summary by configuration
-- `tables/case_summary.csv` — aggregate summary by case
-- `figures/` — PNG visualisations generated from the benchmark data
+- `Chrome Benchmarkv2.txt` — latest human-readable benchmark capture used for the current manuscript revision
+- `Chrome Benchmark.txt` — earlier benchmark capture retained for comparison
+- `turboquant-benchmark.json` — earlier full benchmark export from the browser harness
+- `tables/benchmark_rows.csv` — earlier row-level per-case-per-configuration results
+- `tables/config_summary.csv` — earlier aggregate summary by configuration
+- `tables/case_summary.csv` — earlier aggregate summary by case
+- `figures/` — PNG visualisations generated from the earlier benchmark export; these should be regenerated from the latest capture before submission
 
 The forked `transformers.js` runtime is available at `https://github.com/stratoslab/transformers.js`. Relevant implementation commits are listed in Section 5.4.
 

@@ -1,6 +1,6 @@
 # Implementation and Methods
 
-Date: 2026-04-05
+Date: 2026-04-06
 
 This note explains what was actually implemented for the browser TurboQuant experiment, how the code is structured, and how the benchmark was produced.
 
@@ -186,10 +186,11 @@ The benchmark suite currently measures:
 
 ## Current benchmark evidence
 
-The current exported data is in:
+The current benchmark artefacts are in:
 
 - `paper/turboquant-benchmark.json`
 - `paper/Chrome Benchmark.txt`
+- `paper/Chrome Benchmarkv2.txt`
 
 and the current analysis is summarized in:
 
@@ -198,9 +199,10 @@ and the current analysis is summarized in:
 At the moment, the strongest supported findings are:
 
 - the browser path works end-to-end on Chrome WebGPU
-- the compressed path reduces packed KV size relative to the dense path
-- the compressed path is slower than the dense baseline in the current sweep
-- quality is directionally preserved on some long-context prompts but not stable enough for a "no quality loss" claim
+- the compressed path now shows a context-length crossover rather than a uniform slowdown
+- short prompts still favor the dense baseline, but the longest prompt favors TurboQuant on latency
+- compression is beneficial only once cache pressure is high enough; short prompts can show cache expansion
+- `Safe Default` is currently the strongest quality-preserving point in the latest sweep
 
 ## Why the current implementation underperforms
 
@@ -212,7 +214,7 @@ The likely reasons are structural:
 - the current quantizer is still an approximation of the paper algorithm
 - conservative defaults keep more of the cache dense to protect output quality
 
-The result is a browser implementation that is experimentally valid, but not yet competitive on latency.
+The result is a browser implementation whose payoff is highly dependent on context length. In the current Chrome run, the short cases do not amortize the extra cache machinery, while the longest case does.
 
 ## How this work helps anyway
 

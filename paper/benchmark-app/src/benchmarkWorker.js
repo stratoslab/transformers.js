@@ -5,8 +5,6 @@ import {
   Gemma4ForConditionalGeneration,
   TextStreamer,
 } from "@huggingface/transformers";
-import { DynamicCache, TurboQuantCache } from "@transformers-src/cache_utils.js";
-import { Tensor } from "@transformers-src/utils/tensor.js";
 
 const DEFAULT_MODEL_ID = "onnx-community/gemma-4-E2B-it-ONNX";
 
@@ -106,11 +104,6 @@ function average(values) {
   return values.reduce((sum, value) => sum + value, 0) / Math.max(values.length, 1);
 }
 
-function median(values) {
-  const sorted = [...values].sort((a, b) => a - b);
-  return sorted[Math.floor(sorted.length / 2)] ?? 0;
-}
-
 function commonPrefixLength(a, b) {
   const limit = Math.min(a.length, b.length);
   let index = 0;
@@ -144,7 +137,13 @@ function buildPromptInputs(modelId, prompt) {
 }
 
 async function runCase(prompt, options) {
-  const { runs, maxNewTokens, cacheImplementation, cacheConfig } = options;
+  const {
+    runs,
+    maxNewTokens,
+    cacheImplementation,
+    cacheConfig,
+  } = options;
+
   let lastResult = null;
   const timings = [];
   const ttfts = [];
@@ -175,9 +174,6 @@ async function runCase(prompt, options) {
     timings.push(elapsed);
     ttfts.push(firstTokenAt === null ? elapsed : firstTokenAt - startedAt);
     if (captureResult) {
-      if (lastResult) {
-        await disposeGenerationResult(lastResult);
-      }
       lastResult = result;
     }
   }
@@ -207,162 +203,12 @@ async function runCase(prompt, options) {
   return payload;
 }
 
-function makePresentTensor(seqLen, numKvHeads, headDim) {
-  const data = new Float32Array(numKvHeads * seqLen * headDim);
-  let flat = 0;
-  for (let h = 0; h < numKvHeads; ++h) {
-    for (let s = 0; s < seqLen; ++s) {
-      for (let d = 0; d < headDim; ++d) {
-        const k = h * 10000 + s * 131 + d;
-        data[flat++] = Math.sin(k / 11) * 0.5 + Math.cos(k / 13) * 0.3;
-      }
-    }
-  }
-  return new Tensor("float32", data, [1, numKvHeads, seqLen, headDim]);
-}
-
-function buildSyntheticFeeds(seqLen, layers, numKvHeads, headDim) {
-  const feeds = {};
-  for (let l = 0; l < layers; ++l) {
-    feeds[`present.${l}.key`] = makePresentTensor(seqLen, numKvHeads, headDim);
-    feeds[`present.${l}.value`] = makePresentTensor(seqLen, numKvHeads, headDim);
-  }
-  return feeds;
-}
-
-function disposeTensorMap(entries) {
-  for (const tensor of Object.values(entries ?? {})) {
-    tensor?.dispose?.();
-  }
-}
-
-async function buildSyntheticCache(CacheClass, config, params, seqLen) {
-  const cache = new CacheClass(config);
-  return await cache.update(buildSyntheticFeeds(seqLen, params.layers, params.numKvHeads, params.headDim));
-}
-
-async function runMaterializeOnly(params) {
-  const rows = [];
-  const seqLens = params.seqLens;
-  const runs = params.runs;
-  const warmupRuns = params.warmupRuns;
-
-  for (const seqLen of seqLens) {
-    for (const backend of [
-      { label: "DynamicCache", CacheClass: DynamicCache, cfg: {} },
-      ...params.turboConfigs.map((cfg) => ({
-        label: cfg.label,
-        CacheClass: TurboQuantCache,
-        cfg,
-      })),
-    ]) {
-      post({
-        status: "phase",
-        message: `Materialize-only: ${backend.label} @ seq=${seqLen}`,
-      });
-      const cache = await buildSyntheticCache(backend.CacheClass, backend.cfg, params, seqLen);
-      const timings = [];
-      for (let i = 0; i < warmupRuns + runs; ++i) {
-        const started = performance.now();
-        const materialized = cache.materialize();
-        const ended = performance.now();
-        disposeTensorMap(materialized);
-        if (i >= warmupRuns) {
-          timings.push(ended - started);
-        }
-      }
-      const stats = cache.getStats();
-      rows.push({
-        benchmark: "materialize_only",
-        backend: backend.label,
-        seq_len: seqLen,
-        avg_materialize_ms: average(timings),
-        median_materialize_ms: median(timings),
-        min_materialize_ms: Math.min(...timings),
-        max_materialize_ms: Math.max(...timings),
-        packed_bytes: stats.packed_bytes,
-        dense_bytes: stats.dense_bytes,
-        compression_ratio: stats.packed_bytes ? stats.dense_bytes / stats.packed_bytes : 1,
-        compressed_blocks: stats.compressed_blocks ?? null,
-      });
-    }
-  }
-  return rows;
-}
-
-async function runCacheSweep(params) {
-  const rows = [];
-  const seqLens = params.seqLens;
-  const decodeSteps = params.decodeSteps;
-
-  for (const backend of [
-    { label: "DynamicCache", CacheClass: DynamicCache, cfg: {} },
-    ...params.turboConfigs.map((cfg) => ({
-      label: cfg.label,
-      CacheClass: TurboQuantCache,
-      cfg,
-    })),
-  ]) {
-    for (const seqLen of seqLens) {
-      post({
-        status: "phase",
-        message: `Cache sweep: ${backend.label} @ seq=${seqLen}`,
-      });
-      let cache = new backend.CacheClass(backend.cfg);
-      let updateMs = 0;
-      let materializeMs = 0;
-      let prefillUpdateMs = 0;
-      let prefillMaterializeMs = 0;
-
-      let started = performance.now();
-      cache = await cache.update(buildSyntheticFeeds(seqLen, params.layers, params.numKvHeads, params.headDim));
-      let ended = performance.now();
-      updateMs += ended - started;
-      prefillUpdateMs = ended - started;
-
-      started = performance.now();
-      let materialized = cache.materialize();
-      ended = performance.now();
-      materializeMs += ended - started;
-      prefillMaterializeMs = ended - started;
-      disposeTensorMap(materialized);
-
-      for (let step = 1; step <= decodeSteps; ++step) {
-        const totalLen = seqLen + step;
-        started = performance.now();
-        cache = await cache.update(buildSyntheticFeeds(totalLen, params.layers, params.numKvHeads, params.headDim));
-        ended = performance.now();
-        updateMs += ended - started;
-
-        started = performance.now();
-        materialized = cache.materialize();
-        ended = performance.now();
-        materializeMs += ended - started;
-        disposeTensorMap(materialized);
-      }
-
-      const stats = cache.getStats();
-      rows.push({
-        benchmark: "cache_sweep",
-        backend: backend.label,
-        seq_len: seqLen,
-        prefill_update_ms: prefillUpdateMs,
-        prefill_materialize_ms: prefillMaterializeMs,
-        decode_update_per_step_ms: (updateMs - prefillUpdateMs) / decodeSteps,
-        decode_materialize_per_step_ms: (materializeMs - prefillMaterializeMs) / decodeSteps,
-        total_ms: updateMs + materializeMs,
-        packed_bytes: stats.packed_bytes,
-        dense_bytes: stats.dense_bytes,
-        compression_ratio: stats.packed_bytes ? stats.dense_bytes / stats.packed_bytes : 1,
-        compressed_blocks: stats.compressed_blocks ?? null,
-      });
-    }
-  }
-
-  return rows;
-}
-
-async function runBrowserBenchmark({ modelId = DEFAULT_MODEL_ID, cases, runs = 1, sweepConfigs }) {
+async function runBenchmark({
+  modelId = DEFAULT_MODEL_ID,
+  cases,
+  runs = 1,
+  sweepConfigs,
+}) {
   await ensureLoaded(modelId);
   const normalizedCases = cases ?? [];
   const normalizedSweepConfigs = sweepConfigs ?? [];
@@ -434,40 +280,20 @@ async function runBrowserBenchmark({ modelId = DEFAULT_MODEL_ID, cases, runs = 1
     });
   }
 
-  return {
-    kind: "browser_suite",
-    modelId,
-    runs,
-    cases: normalizedCases,
-    sweepConfigs: normalizedSweepConfigs,
-    results,
-    browser: {
-      userAgent: navigator.userAgent,
-      language: navigator.language,
+  post({
+    status: "complete",
+    result: {
+      modelId,
+      runs,
+      cases: normalizedCases,
+      sweepConfigs: normalizedSweepConfigs,
+      results,
+      browser: {
+        userAgent: navigator.userAgent,
+        language: navigator.language,
+      },
     },
-  };
-}
-
-async function runSyntheticBenchmark(data = {}) {
-  const params = {
-    seqLens: data.seqLens ?? [],
-    decodeSteps: data.decodeSteps ?? 32,
-    layers: data.layers ?? 4,
-    numKvHeads: data.numKvHeads ?? 4,
-    headDim: data.headDim ?? 128,
-    runs: data.runs ?? 12,
-    warmupRuns: data.warmupRuns ?? 3,
-    turboConfigs: data.turboConfigs ?? [],
-  };
-
-  const materializeRows = await runMaterializeOnly(params);
-  const sweepRows = await runCacheSweep(params);
-
-  return {
-    kind: "synthetic_cache",
-    params,
-    rows: [...materializeRows, ...sweepRows],
-  };
+  });
 }
 
 self.addEventListener("message", async (event) => {
@@ -475,17 +301,18 @@ self.addEventListener("message", async (event) => {
 
   try {
     switch (type) {
+      case "ping":
+        post({
+          status: "phase",
+          message: `Worker ready (${typeof navigator !== "undefined" && "gpu" in navigator ? "WebGPU API visible" : "WebGPU API missing"})`,
+        });
+        break;
       case "load":
         post({ status: "phase", message: "Loading benchmark model..." });
         await ensureLoaded(data?.modelId ?? DEFAULT_MODEL_ID);
         break;
       case "benchmark":
-        post({ status: "phase", message: "Starting browser benchmark suite..." });
-        post({ status: "complete", result: await runBrowserBenchmark(data ?? {}) });
-        break;
-      case "synthetic":
-        post({ status: "phase", message: "Starting synthetic cache benchmarks..." });
-        post({ status: "complete", result: await runSyntheticBenchmark(data ?? {}) });
+        await runBenchmark(data ?? {});
         break;
       default:
         break;

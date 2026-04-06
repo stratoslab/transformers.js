@@ -1,0 +1,2465 @@
+Chrome Benchmark
+
+TurboQuant Paper Harness
+Runs a reproducible case suite in a browser worker, sweeps multiple TurboQuant configurations, and reports latency, TTFT, compression, decode throughput, and output agreement against the dynamic baseline.
+
+Model
+onnx-community/gemma-4-E2B-it-ONNX
+Runs per point
+2
+Benchmark Cases
+
+Risk Summary
+Short enterprise risk review prompt.
+
+Operations Checklist
+Structured compliance checklist output.
+
+Policy Comparison
+Requires comparison and ordered reasoning.
+
+Long Context 1x
+Longer prompt to exercise cache behavior.
+
+Long Context 2x
+Very long prompt to increase KV-cache pressure.
+Sweep Config JSON
+[
+  {
+    "id": "safe-default",
+    "label": "Safe Default",
+    "b_key": 4,
+    "b_value": 8,
+    "residual_length": 64
+  },
+  {
+    "id": "mid-compression",
+    "label": "Mid Compression",
+    "b_key": 4,
+    "b_value": 8,
+    "residual_length": 48
+  },
+  {
+    "id": "key-heavy",
+    "label": "Key Heavy",
+    "b_key": 3,
+    "b_value": 8,
+    "residual_length": 64
+  }
+]
+Load Model
+Run Suite
+Export JSON
+Benchmark complete
+
+Recent Worker Events
+Running Key Heavy on Long Context 2x (3/3)...
+Running Mid Compression on Long Context 2x (2/3)...
+Running Safe Default on Long Context 2x (1/3)...
+Running dynamic baseline for Long Context 2x...
+Warming up Long Context 2x (5/5)...
+Running Key Heavy on Long Context 1x (3/3)...
+Running Mid Compression on Long Context 1x (2/3)...
+Running Safe Default on Long Context 1x (1/3)...
+Running dynamic baseline for Long Context 1x...
+Warming up Long Context 1x (4/5)...
+Running Key Heavy on Policy Comparison (3/3)...
+Running Mid Compression on Policy Comparison (2/3)...
+Open this page in Chrome or Chromium with WebGPU enabled. URL: ?benchmark=1
+
+Sweep Summary
+Config	Cases	Avg Speed Ratio	Avg Compression	Avg Prefix Agreement	Exact Matches
+Safe Default	5	1.054x	0.967x	100.000%	5
+Mid Compression	5	1.077x	1.044x	95.277%	3
+Key Heavy	5	1.039x	0.992x	97.950%	3
+Risk Summary
+Short enterprise risk review prompt.
+
+48 max new tokens
+Prompt
+Summarize how a Canton workflow assistant should review a proposed token transfer and list the main risk checks.
+Config	Dynamic Avg	Turbo Avg	TTFT	Decode Tok/s	Compression	Prefix Agree	Exact
+Safe Default	3136.300 ms	3329.300 ms	334.000 ms	16.025	0.667x	100.000%	yes
+Mid Compression	3136.300 ms	3530.200 ms	351.400 ms	15.100	0.667x	100.000%	yes
+Key Heavy	3136.300 ms	3541.350 ms	329.850 ms	14.946	0.667x	100.000%	yes
+Safe Default outputs
+Dynamic
+system
+You are a concise assistant.
+user
+Summarize how a Canton workflow assistant should review a proposed token transfer and list the main risk checks.
+model
+A Canton workflow assistant should review a proposed token transfer by performing the following:
+
+1. **Verify Authorization:** Check if the initiating party has the necessary permissions to execute the transfer according to established roles and policies.
+2. **Validate Parameters
+TurboQuant
+system
+You are a concise assistant.
+user
+Summarize how a Canton workflow assistant should review a proposed token transfer and list the main risk checks.
+model
+A Canton workflow assistant should review a proposed token transfer by performing the following:
+
+1. **Verify Authorization:** Check if the initiating party has the necessary permissions to execute the transfer according to established roles and policies.
+2. **Validate Parameters
+Mid Compression outputs
+Dynamic
+system
+You are a concise assistant.
+user
+Summarize how a Canton workflow assistant should review a proposed token transfer and list the main risk checks.
+model
+A Canton workflow assistant should review a proposed token transfer by performing the following:
+
+1. **Verify Authorization:** Check if the initiating party has the necessary permissions to execute the transfer according to established roles and policies.
+2. **Validate Parameters
+TurboQuant
+system
+You are a concise assistant.
+user
+Summarize how a Canton workflow assistant should review a proposed token transfer and list the main risk checks.
+model
+A Canton workflow assistant should review a proposed token transfer by performing the following:
+
+1. **Verify Authorization:** Check if the initiating party has the necessary permissions to execute the transfer according to established roles and policies.
+2. **Validate Parameters
+Key Heavy outputs
+Dynamic
+system
+You are a concise assistant.
+user
+Summarize how a Canton workflow assistant should review a proposed token transfer and list the main risk checks.
+model
+A Canton workflow assistant should review a proposed token transfer by performing the following:
+
+1. **Verify Authorization:** Check if the initiating party has the necessary permissions to execute the transfer according to established roles and policies.
+2. **Validate Parameters
+TurboQuant
+system
+You are a concise assistant.
+user
+Summarize how a Canton workflow assistant should review a proposed token transfer and list the main risk checks.
+model
+A Canton workflow assistant should review a proposed token transfer by performing the following:
+
+1. **Verify Authorization:** Check if the initiating party has the necessary permissions to execute the transfer according to established roles and policies.
+2. **Validate Parameters
+Operations Checklist
+Structured compliance checklist output.
+
+72 max new tokens
+Prompt
+Config	Dynamic Avg	Turbo Avg	TTFT	Decode Tok/s	Compression	Prefix Agree	Exact
+Safe Default	4551.200 ms	5843.250 ms	348.500 ms	13.103	0.667x	100.000%	yes
+Mid Compression	4551.200 ms	6021.850 ms	348.550 ms	12.691	0.868x	100.000%	yes
+Key Heavy	4551.200 ms	6223.400 ms	350.250 ms	12.259	0.667x	100.000%	yes
+Safe Default outputs
+Dynamic
+system
+You are a concise assistant.
+user
+Write a concise operations checklist for approving an institutional token transfer on Canton. Include identity, policy, liquidity, and audit controls.
+model
+## Institutional Token Transfer Approval Checklist (Canton)
+
+**Objective:** Ensure compliance and security for all institutional token transfers.
+
+**1. Identity Verification:**
+* [ ] Verify sender/receiver identities against approved institutional lists.
+* [ ] Confirm authorized signatories for both parties.
+* [ ] Validate KYC/AML compliance for all involved entities.
+
+**
+TurboQuant
+system
+You are a concise assistant.
+user
+Write a concise operations checklist for approving an institutional token transfer on Canton. Include identity, policy, liquidity, and audit controls.
+model
+## Institutional Token Transfer Approval Checklist (Canton)
+
+**Objective:** Ensure compliance and security for all institutional token transfers.
+
+**1. Identity Verification:**
+* [ ] Verify sender/receiver identities against approved institutional lists.
+* [ ] Confirm authorized signatories for both parties.
+* [ ] Validate KYC/AML compliance for all involved entities.
+
+**
+Mid Compression outputs
+Dynamic
+system
+You are a concise assistant.
+user
+Write a concise operations checklist for approving an institutional token transfer on Canton. Include identity, policy, liquidity, and audit controls.
+model
+## Institutional Token Transfer Approval Checklist (Canton)
+
+**Objective:** Ensure compliance and security for all institutional token transfers.
+
+**1. Identity Verification:**
+* [ ] Verify sender/receiver identities against approved institutional lists.
+* [ ] Confirm authorized signatories for both parties.
+* [ ] Validate KYC/AML compliance for all involved entities.
+
+**
+TurboQuant
+system
+You are a concise assistant.
+user
+Write a concise operations checklist for approving an institutional token transfer on Canton. Include identity, policy, liquidity, and audit controls.
+model
+## Institutional Token Transfer Approval Checklist (Canton)
+
+**Objective:** Ensure compliance and security for all institutional token transfers.
+
+**1. Identity Verification:**
+* [ ] Verify sender/receiver identities against approved institutional lists.
+* [ ] Confirm authorized signatories for both parties.
+* [ ] Validate KYC/AML compliance for all involved entities.
+
+**
+Key Heavy outputs
+Dynamic
+system
+You are a concise assistant.
+user
+Write a concise operations checklist for approving an institutional token transfer on Canton. Include identity, policy, liquidity, and audit controls.
+model
+## Institutional Token Transfer Approval Checklist (Canton)
+
+**Objective:** Ensure compliance and security for all institutional token transfers.
+
+**1. Identity Verification:**
+* [ ] Verify sender/receiver identities against approved institutional lists.
+* [ ] Confirm authorized signatories for both parties.
+* [ ] Validate KYC/AML compliance for all involved entities.
+
+**
+TurboQuant
+system
+You are a concise assistant.
+user
+Write a concise operations checklist for approving an institutional token transfer on Canton. Include identity, policy, liquidity, and audit controls.
+model
+## Institutional Token Transfer Approval Checklist (Canton)
+
+**Objective:** Ensure compliance and security for all institutional token transfers.
+
+**1. Identity Verification:**
+* [ ] Verify sender/receiver identities against approved institutional lists.
+* [ ] Confirm authorized signatories for both parties.
+* [ ] Validate KYC/AML compliance for all involved entities.
+
+**
+Policy Comparison
+Requires comparison and ordered reasoning.
+
+80 max new tokens
+Prompt
+Compare a manual approval workflow versus an automated Canton transfer policy engine. Give the tradeoffs in a 4-item numbered list.
+Config	Dynamic Avg	Turbo Avg	TTFT	Decode Tok/s	Compression	Prefix Agree	Exact
+Safe Default	5053.900 ms	6724.100 ms	341.750 ms	12.535	0.667x	100.000%	yes
+Mid Compression	5053.900 ms	6513.650 ms	345.700 ms	12.970	0.851x	77.759%	no
+Key Heavy	5053.900 ms	6799.450 ms	356.400 ms	12.416	0.667x	100.000%	yes
+Safe Default outputs
+Dynamic
+system
+You are a concise assistant.
+user
+Compare a manual approval workflow versus an automated Canton transfer policy engine. Give the tradeoffs in a 4-item numbered list.
+model
+Here are the tradeoffs:
+
+1. **Speed vs. Control:** Manual workflows offer high control but are slow; automated engines offer high speed but require careful upfront configuration.
+2. **Error Rate:** Manual processes are prone to human error; automated systems reduce errors but require robust initial testing.
+3. **Cost:** Manual processes incur labor costs; automated systems have higher initial development/setup costs
+TurboQuant
+system
+You are a concise assistant.
+user
+Compare a manual approval workflow versus an automated Canton transfer policy engine. Give the tradeoffs in a 4-item numbered list.
+model
+Here are the tradeoffs:
+
+1. **Speed vs. Control:** Manual workflows offer high control but are slow; automated engines offer high speed but require careful upfront configuration.
+2. **Error Rate:** Manual processes are prone to human error; automated systems reduce errors but require robust initial testing.
+3. **Cost:** Manual processes incur labor costs; automated systems have higher initial development/setup costs
+Mid Compression outputs
+Dynamic
+system
+You are a concise assistant.
+user
+Compare a manual approval workflow versus an automated Canton transfer policy engine. Give the tradeoffs in a 4-item numbered list.
+model
+Here are the tradeoffs:
+
+1. **Speed vs. Control:** Manual workflows offer high control but are slow; automated engines offer high speed but require careful upfront configuration.
+2. **Error Rate:** Manual processes are prone to human error; automated systems reduce errors but require robust initial testing.
+3. **Cost:** Manual processes incur labor costs; automated systems have higher initial development/setup costs
+TurboQuant
+system
+You are a concise assistant.
+user
+Compare a manual approval workflow versus an automated Canton transfer policy engine. Give the tradeoffs in a 4-item numbered list.
+model
+Here are the tradeoffs:
+
+1. **Speed vs. Control:** Manual workflows offer high control but are slow; automated engines offer high speed but require careful upfront configuration.
+2. **Error Rate:** Manual processes are prone to human error; automated systems reduce errors but require rigorous testing to prevent configuration bugs.
+3. **Cost:** Manual processes incur high labor costs; automated systems have higher initial
+Key Heavy outputs
+Dynamic
+system
+You are a concise assistant.
+user
+Compare a manual approval workflow versus an automated Canton transfer policy engine. Give the tradeoffs in a 4-item numbered list.
+model
+Here are the tradeoffs:
+
+1. **Speed vs. Control:** Manual workflows offer high control but are slow; automated engines offer high speed but require careful upfront configuration.
+2. **Error Rate:** Manual processes are prone to human error; automated systems reduce errors but require robust initial testing.
+3. **Cost:** Manual processes incur labor costs; automated systems have higher initial development/setup costs
+TurboQuant
+system
+You are a concise assistant.
+user
+Compare a manual approval workflow versus an automated Canton transfer policy engine. Give the tradeoffs in a 4-item numbered list.
+model
+Here are the tradeoffs:
+
+1. **Speed vs. Control:** Manual workflows offer high control but are slow; automated engines offer high speed but require careful upfront configuration.
+2. **Error Rate:** Manual processes are prone to human error; automated systems reduce errors but require robust initial testing.
+3. **Cost:** Manual processes incur labor costs; automated systems have higher initial development/setup costs
+Long Context 1x
+Longer prompt to exercise cache behavior.
+
+96 max new tokens
+Prompt
+You are reviewing a Canton transfer policy package.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Using the review notes above, produce a concise approval memo with key risks, blockers, and required approvals.
+Config	Dynamic Avg	Turbo Avg	TTFT	Decode Tok/s	Compression	Prefix Agree	Exact
+Safe Default	39041.750 ms	35729.450 ms	17263.900 ms	5.199	1.389x	100.000%	yes
+Mid Compression	39041.750 ms	47623.750 ms	26416.100 ms	4.527	1.389x	100.000%	yes
+Key Heavy	39041.750 ms	51258.050 ms	29782.350 ms	4.470	1.447x	93.017%	no
+Safe Default outputs
+Dynamic
+system
+You are a concise assistant.
+user
+You are reviewing a Canton transfer policy package.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Using the review notes above, produce a concise approval memo with key risks, blockers, and required approvals.
+model
+## Canton Transfer Policy Review Memo
+
+**Summary:** Comprehensive review of the Canton transfer package has been conducted against established policy guidelines.
+
+**Key Checks Performed:**
+
+*   **Authorization:** Verified submitter authorization for the Canton workflow.
+*   **Recipient Vetting:** Confirmed recipient identity resolution and successful sanctioned-party screening.
+*   **Token Integrity:** Checked token type, amount, decimal precision, and ledger domain alignment.
+*   **Compliance Limits:** Valid
+TurboQuant
+system
+You are a concise assistant.
+user
+You are reviewing a Canton transfer policy package.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Using the review notes above, produce a concise approval memo with key risks, blockers, and required approvals.
+model
+## Canton Transfer Policy Review Memo
+
+**Summary:** Comprehensive review of the Canton transfer package has been conducted against established policy guidelines.
+
+**Key Checks Performed:**
+
+*   **Authorization:** Verified submitter authorization for the Canton workflow.
+*   **Recipient Vetting:** Confirmed recipient identity resolution and successful sanctioned-party screening.
+*   **Token Integrity:** Checked token type, amount, decimal precision, and ledger domain alignment.
+*   **Compliance Limits:** Valid
+Mid Compression outputs
+Dynamic
+system
+You are a concise assistant.
+user
+You are reviewing a Canton transfer policy package.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Using the review notes above, produce a concise approval memo with key risks, blockers, and required approvals.
+model
+## Canton Transfer Policy Review Memo
+
+**Summary:** Comprehensive review of the Canton transfer package has been conducted against established policy guidelines.
+
+**Key Checks Performed:**
+
+*   **Authorization:** Verified submitter authorization for the Canton workflow.
+*   **Recipient Vetting:** Confirmed recipient identity resolution and successful sanctioned-party screening.
+*   **Token Integrity:** Checked token type, amount, decimal precision, and ledger domain alignment.
+*   **Compliance Limits:** Valid
+TurboQuant
+system
+You are a concise assistant.
+user
+You are reviewing a Canton transfer policy package.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Using the review notes above, produce a concise approval memo with key risks, blockers, and required approvals.
+model
+## Canton Transfer Policy Review Memo
+
+**Summary:** Comprehensive review of the Canton transfer package has been conducted against established policy guidelines.
+
+**Key Checks Performed:**
+
+*   **Authorization:** Verified submitter authorization for the Canton workflow.
+*   **Recipient Vetting:** Confirmed recipient identity resolution and successful sanctioned-party screening.
+*   **Token Integrity:** Checked token type, amount, decimal precision, and ledger domain alignment.
+*   **Compliance Limits:** Valid
+Key Heavy outputs
+Dynamic
+system
+You are a concise assistant.
+user
+You are reviewing a Canton transfer policy package.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Using the review notes above, produce a concise approval memo with key risks, blockers, and required approvals.
+model
+## Canton Transfer Policy Review Memo
+
+**Summary:** Comprehensive review of the Canton transfer package has been conducted against established policy guidelines.
+
+**Key Checks Performed:**
+
+*   **Authorization:** Verified submitter authorization for the Canton workflow.
+*   **Recipient Vetting:** Confirmed recipient identity resolution and successful sanctioned-party screening.
+*   **Token Integrity:** Checked token type, amount, decimal precision, and ledger domain alignment.
+*   **Compliance Limits:** Valid
+TurboQuant
+system
+You are a concise assistant.
+user
+You are reviewing a Canton transfer policy package.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Using the review notes above, produce a concise approval memo with key risks, blockers, and required approvals.
+model
+## Canton Transfer Policy Review Memo
+
+**Summary:** This review confirms the transfer adheres to all mandated policy checks.
+
+**Key Checks Performed:**
+
+*   **Authorization:** Verified submitter authorization for the Canton workflow.
+*   **Recipient Vetting:** Confirmed recipient identity resolution and successful sanctioned-party screening.
+*   **Token Integrity:** Verified alignment of token type, amount, decimal precision, and ledger domain.
+*   **Compliance Limits:** Validated satisfaction
+Long Context 2x
+Very long prompt to increase KV-cache pressure.
+
+96 max new tokens
+Prompt
+You are reviewing a Canton transfer policy package.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Using the review notes above, produce a concise approval memo with key risks, blockers, and required approvals.
+Config	Dynamic Avg	Turbo Avg	TTFT	Decode Tok/s	Compression	Prefix Agree	Exact
+Safe Default	115474.600 ms	67835.400 ms	46292.400 ms	4.456	1.446x	100.000%	yes
+Mid Compression	115474.600 ms	53889.650 ms	38868.100 ms	6.391	1.446x	98.626%	no
+Key Heavy	115474.600 ms	55651.800 ms	40230.300 ms	6.225	1.512x	96.732%	no
+Safe Default outputs
+Dynamic
+system
+You are a concise assistant.
+user
+You are reviewing a Canton transfer policy package.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Using the review notes above, produce a concise approval memo with key risks, blockers, and required approvals.
+model
+## Canton Transfer Policy Review Memo
+
+**Summary:** Comprehensive review of the Canton transfer package has been conducted, focusing on authorization, identity verification, compliance with limits, and procedural safeguards.
+
+**Key Checks Performed:**
+
+*   **Authorization:** Verified submitter authorization for the Canton workflow.
+*   **Recipient Vetting:** Confirmed recipient identity resolution and successful sanctioned-party screening.
+*   **Token Details:** Checked token type, amount, decimal precision, and ledger
+TurboQuant
+system
+You are a concise assistant.
+user
+You are reviewing a Canton transfer policy package.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Using the review notes above, produce a concise approval memo with key risks, blockers, and required approvals.
+model
+## Canton Transfer Policy Review Memo
+
+**Summary:** Comprehensive review of the Canton transfer package has been conducted, focusing on authorization, identity verification, compliance with limits, and procedural safeguards.
+
+**Key Checks Performed:**
+
+*   **Authorization:** Verified submitter authorization for the Canton workflow.
+*   **Recipient Vetting:** Confirmed recipient identity resolution and successful sanctioned-party screening.
+*   **Token Details:** Checked token type, amount, decimal precision, and ledger
+Mid Compression outputs
+Dynamic
+system
+You are a concise assistant.
+user
+You are reviewing a Canton transfer policy package.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Using the review notes above, produce a concise approval memo with key risks, blockers, and required approvals.
+model
+## Canton Transfer Policy Review Memo
+
+**Summary:** Comprehensive review of the Canton transfer package has been conducted, focusing on authorization, identity verification, compliance with limits, and procedural safeguards.
+
+**Key Checks Performed:**
+
+*   **Authorization:** Verified submitter authorization for the Canton workflow.
+*   **Recipient Vetting:** Confirmed recipient identity resolution and successful sanctioned-party screening.
+*   **Token Details:** Checked token type, amount, decimal precision, and ledger
+TurboQuant
+system
+You are a concise assistant.
+user
+You are reviewing a Canton transfer policy package.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Using the review notes above, produce a concise approval memo with key risks, blockers, and required approvals.
+model
+## Canton Transfer Policy Review Memo
+
+**Summary:** Comprehensive review of the Canton transfer package has been conducted, focusing on authorization, identity verification, compliance with limits, and procedural safeguards.
+
+**Key Checks Performed:**
+
+*   **Authorization:** Verified submitter authorization for the Canton workflow.
+*   **Recipient Verification:** Confirmed recipient identity resolution and successful sanctioned-party screening.
+*   **Token Details:** Checked token type, amount, decimal precision, and ledger domain
+Key Heavy outputs
+Dynamic
+system
+You are a concise assistant.
+user
+You are reviewing a Canton transfer policy package.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Using the review notes above, produce a concise approval memo with key risks, blockers, and required approvals.
+model
+## Canton Transfer Policy Review Memo
+
+**Summary:** Comprehensive review of the Canton transfer package has been conducted, focusing on authorization, identity verification, compliance with limits, and procedural safeguards.
+
+**Key Checks Performed:**
+
+*   **Authorization:** Verified submitter authorization for the Canton workflow.
+*   **Recipient Vetting:** Confirmed recipient identity resolution and successful sanctioned-party screening.
+*   **Token Details:** Checked token type, amount, decimal precision, and ledger
+TurboQuant
+system
+You are a concise assistant.
+user
+You are reviewing a Canton transfer policy package.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Review notes:
+- Verify that the submitter is authorized for the Canton workflow.
+- Confirm the recipient identity is resolved and sanctioned-party screening passed.
+- Check token type, amount, decimal precision, and ledger domain alignment.
+- Validate that holding limits, concentration limits, and jurisdiction rules are satisfied.
+- Ensure the transfer does not bypass approval policy, dual control, or settlement cutoffs.
+- Confirm available balance, pending locks, and any in-flight transfer dependencies.
+- Log all approvals, policy evaluations, and exception paths for later audit.
+
+Using the review notes above, produce a concise approval memo with key risks, blockers, and required approvals.
+model
+## Canton Transfer Policy Review Memo
+
+**Summary:** Comprehensive review of the Canton transfer package has been completed, focusing on authorization, compliance, and operational integrity.
+
+**Key Checks Performed:**
+
+*   **Authorization:** Verified submitter authorization for the Canton workflow.
+*   **Recipient Vetting:** Confirmed recipient identity resolution and successful sanctioned-party screening.
+*   **Token Details:** Checked token type, amount, decimal precision, and ledger domain alignment.
+*

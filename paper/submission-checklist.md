@@ -2,7 +2,7 @@
 
 Recommended classification: **Computer Science and Mathematics → Artificial Intelligence and Machine Learning**
 Article type: **Article**
-Version: draft checklist as of 2026-04-05
+Version: draft checklist as of 2026-04-06
 
 Use this checklist before submitting or sharing `draft-paper.md` as a Preprints.org preprint. Items marked ✅ are completed in the current draft. Items marked ⚠️ need action before submission. Items marked ❌ are known gaps that should be resolved or explicitly acknowledged.
 
@@ -36,12 +36,12 @@ Use this checklist before submitting or sharing `draft-paper.md` as a Preprints.
 - [✅] No fabricated experimental results
 - [✅] No unsupported performance claims (all headline numbers are in the benchmark data)
 - [✅] "No quality loss" claim absent — not supported by benchmark data and not made
-- [✅] "TurboQuant improves browser latency" claim absent — not supported and not made
-- [✅] Mixed/negative framing throughout — results accurately described as slower than baseline
+- [✅] "TurboQuant improves browser latency in general" claim absent — the latest results are crossover-dependent, not universal
+- [✅] Mixed/tradeoff framing throughout — results are described as slower on short prompts and faster on the longest prompt
 - [✅] Implementation correctly described as TurboQuant-*inspired*, not a full reproduction
 - [✅] Figure paths updated to relative paths (`figures/filename.png`) — no absolute machine paths
 - [✅] Data availability paths updated to relative/local filenames — no absolute machine paths
-- [✅] All numbers in text traceable to `tables/config_summary.csv` or `tables/benchmark_rows.csv`
+- [✅] All numbers in text traceable to the benchmark capture or derived directly from the reported case tables
 
 ---
 
@@ -90,26 +90,22 @@ Use this checklist before submitting or sharing `draft-paper.md` as a Preprints.
 
 ## Claims audit (pass/fail against benchmark data)
 
-The following claims appear in the manuscript and are verified against `config_summary.csv` and `benchmark_rows.csv`:
+The following claims appear in the manuscript and are verified against `Chrome Benchmarkv2.txt`:
 
 | Claim | Source | Status |
 |---|---|---|
-| "1.29–1.34× average compression" | config_summary.csv avg_compression_ratio | ✅ Exact (1.290, 1.328, 1.336) |
-| "0.50–0.57× average speed ratio" | config_summary.csv avg_speed_ratio | ✅ Exact (0.495, 0.538, 0.573) |
-| "69.9–83.7% average prefix agreement" | config_summary.csv avg_prefix_agreement_pct | ✅ Exact (69.9, 77.8, 83.7) |
-| "18.5 tokens/s baseline TPS" | config_summary.csv avg_dynamic_tps | ✅ Exact (18.513) |
-| "~9–10 tokens/s TurboQuant TPS" | config_summary.csv avg_turbo_tps | ✅ (10.0, 10.1, 9.1) |
-| "0.74 tokens/s on Long Context 2x (Safe Default)" | benchmark_rows.csv turbo_tps | ✅ Exact (0.7397) |
-| "9.98 tokens/s baseline on Long Context 2x" | benchmark_rows.csv dynamic_tps | ✅ Exact (9.978) |
-| "13.5× throughput gap on Long Context 2x" | derived: 9.978/0.7397 | ✅ Exact (13.49×) |
-| "1.28× throughput gap on Risk Summary" | derived: 23.56/18.39 | ✅ Exact (1.281×) |
-| "43.7 MB dense cache on Long Context 2x" | benchmark_rows.csv dynamic_dense_bytes / (1024²) | ✅ (45,821,952 / 1,048,576 = 43.7 MB) |
-| "1.5 MB dense cache on Risk Summary" | benchmark_rows.csv dynamic_dense_bytes / (1024²) | ✅ (1,603,584 / 1,048,576 = 1.53 MB) |
-| "0/5 exact matches for all configs" | config_summary.csv exact_match_count | ✅ All 0 |
-| "35.8% prefix agreement on Policy Comparison, Mid Compression" | benchmark_rows.csv prefix_agreement_pct | ✅ Exact (35.786%) |
-| "96.6% prefix agreement on Long Context 2x, Safe Default" | benchmark_rows.csv prefix_agreement_pct | ✅ Exact (96.644%) |
-| "Long Context 2x TurboQuant TTFT: 41–43 s vs 45.8 s baseline" | benchmark_rows.csv ttft fields | ✅ (41788, 43055, 40952 ms vs 45782 ms) |
-| "Mid Compression dominated by Safe Default on 3/5 cases" | derived analysis | ✅ Verified |
+| "0.967–1.044× average compression" | Sweep Summary | ✅ Exact (0.967, 0.992, 1.044) |
+| "1.039–1.077× average speed ratio" | Sweep Summary | ✅ Exact (1.039, 1.054, 1.077) |
+| "95.277–100.000% average prefix agreement" | Sweep Summary | ✅ Exact |
+| "`Safe Default` exact on all five cases" | Sweep Summary | ✅ Exact (`5`) |
+| "`Mid Compression` and `Key Heavy` exact on 3/5 cases" | Sweep Summary | ✅ Exact (`3`, `3`) |
+| "All three short cases remain slower than baseline" | Risk/Operations/Policy rows | ✅ Verified |
+| "`Long Context 2x` is faster for all three TurboQuant configs" | Long Context 2x rows | ✅ Verified (`1.702x`, `2.143x`, `2.075x`) |
+| "`Long Context 1x` is faster only for `Safe Default`" | Long Context 1x rows | ✅ Verified (`1.093x`, `0.820x`, `0.762x`) |
+| "Short-case compression can be negative" | Risk/Operations/Policy rows | ✅ Verified (`0.667x` to `0.868x`) |
+| "Best observed compression is `1.512x` on `Long Context 2x`, `Key Heavy`" | Long Context 2x row | ✅ Exact |
+| "Worst observed prefix agreement is `77.759%` on Policy Comparison, Mid Compression" | Policy Comparison row | ✅ Exact |
+| "Safe Default is the strongest quality-preserving setting" | Sweep Summary + case rows | ✅ Verified |
 
 ---
 

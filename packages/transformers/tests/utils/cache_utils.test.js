@@ -160,4 +160,35 @@ describe("Cache utilities", () => {
     // First 5 steps fill the tail without eviction, next 15 each trigger one.
     expect(fineGrained.getStats().compressed_blocks).toEqual(16);
   });
+
+  it("reuses restored immutable TurboQuant blocks across incremental generations", async () => {
+    let cache = new TurboQuantCache({
+      b_key: 3,
+      b_value: 3,
+      residual_length: 4,
+      eviction_batch: 4,
+    });
+
+    for (let n = 1; n <= 8; ++n) {
+      cache = await cache.update({ "present.0.key": makeGrowingKV(n) });
+    }
+
+    const firstEntry = cache.entries["past_key_values.0.key"];
+    expect(firstEntry.compressedBlocks).toHaveLength(1);
+    const firstBlock = firstEntry.compressedBlocks[0];
+    const firstMaterialized = cache.materialize();
+    expect(firstMaterialized["past_key_values.0.key"].dims).toEqual([1, 2, 8, 8]);
+
+    const restoredSymbols = Object.getOwnPropertySymbols(firstBlock);
+    expect(restoredSymbols).toHaveLength(1);
+    const restoredPrefix = firstBlock[restoredSymbols[0]];
+    expect(restoredPrefix).toBeInstanceOf(Float32Array);
+
+    const nextCache = await cache.update({ "present.0.key": makeGrowingKV(9) });
+    const nextEntry = nextCache.entries["past_key_values.0.key"];
+    expect(nextEntry.compressedBlocks[0]).toBe(firstBlock);
+
+    nextCache.materialize();
+    expect(firstBlock[restoredSymbols[0]]).toBe(restoredPrefix);
+  });
 });

@@ -122,6 +122,7 @@ function isPowerOfTwo(value) {
 // them avoids recomputing the LCG on every cache update (typically thousands
 // of calls per generation).
 const RADEMACHER_CACHE = new Map();
+const RESTORED_BLOCK_CACHE = Symbol('restoredBlockCache');
 
 function createRademacherSigns(dim, seed) {
     const key = (seed >>> 0) * 0x100000000 + dim; // unique composite key
@@ -575,6 +576,11 @@ async function packTensorWithResidualWindow(
 // Factored out of unpackQuantizedTensor so the result can be scatter-copied
 // into a bigger output buffer without allocating an intermediate Tensor.
 function dequantizeRestoredBlock(block) {
+    const cached = block?.[RESTORED_BLOCK_CACHE];
+    if (cached) {
+        return cached;
+    }
+
     const approx = dequantizeArray(block.quantized);
     if (block.residualPacked && block.residualNorms) {
         const headDim = block.dims.at(-1);
@@ -590,7 +596,9 @@ function dequantizeRestoredBlock(block) {
             }
         }
     }
-    return block.rotated ? invertRotation(approx, block.dims, block.rotationSeed) : approx;
+    const restored = block.rotated ? invertRotation(approx, block.dims, block.rotationSeed) : approx;
+    block[RESTORED_BLOCK_CACHE] = restored;
+    return restored;
 }
 
 // Write a packed block's dequantized rows into `out` at `rowOffset`, using

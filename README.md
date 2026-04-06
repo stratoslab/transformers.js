@@ -35,6 +35,30 @@ Transformers.js uses [ONNX Runtime](https://onnxruntime.ai/) to run models in th
 
 For more information, check out the full [documentation](https://huggingface.co/docs/transformers.js).
 
+## Stratos Lab Fork
+
+This repository is used as a TurboQuant experiment fork on top of `transformers.js`.
+
+What was added:
+- A pluggable generation cache abstraction in `packages/transformers/src/cache_utils.js`
+- `DynamicCache` as the dense baseline cache path
+- `TurboQuantCache` as an experimental compressed KV-cache path
+- Cache statistics returned through generation for benchmark reporting
+- Browser benchmark tooling for Gemma 4 Chrome WebGPU runs in [paper](./paper)
+
+How the TurboQuant fork works:
+- The decoder still emits standard dense `present.*` tensors.
+- `TurboQuantCache.update()` packs older KV state into a compressed representation.
+- `TurboQuantCache.materialize()` reconstructs dense `past_key_values.*` tensors for the next ONNX decoder call.
+- A dense residual window is retained to reduce quality loss on recent tokens.
+
+What the benchmark results currently show:
+- `DynamicCache` is still better on short prompts with small KV caches.
+- `TurboQuantCache` becomes useful once context length is large enough.
+- In the latest Chrome WebGPU sweep, TurboQuant is faster on the largest tested context and preserves exact output under the `Safe Default` configuration.
+
+Benchmark artifacts and summary live in [paper](./paper). The manuscript-style writing bundle was moved out of this repo so this fork only carries the benchmark evidence and supporting app code.
+
 
 ## Installation
 

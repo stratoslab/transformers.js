@@ -1,44 +1,38 @@
-# Paper Materials
+# TurboQuant Benchmark Artifacts
 
-This directory collects the current source material for the TurboQuant-in-browser writeup.
+This directory now contains the benchmark assets for the TurboQuant fork work, not the manuscript-writing bundle.
 
-## Files
+The manuscript-style files were moved out of this repo to:
 
-- [draft-paper.md](./draft-paper.md)
-  - Full manuscript-style draft with title, authors, equations, methods, results, and figure/table references.
-- [turboquant-research-review.md](./turboquant-research-review.md)
-  - Literature and platform review covering TurboQuant, `transformers.js`, WebGPU, and ONNX Runtime Web.
-- [implementation-methods.md](./implementation-methods.md)
-  - What was implemented in the `transformers.js` fork and in the Chrome benchmark app, how it works, and what remains incomplete.
-- [preprints-submission-notes.md](./preprints-submission-notes.md)
-  - Recommended Preprints.org subject area, article type guidance, and author-instruction summary tailored to this project.
+- `/Users/dhonampemba/Development/canton/turboquant-paper`
+
+## What is here
+
 - [benchmark-analysis.md](./benchmark-analysis.md)
-  - Analysis of the latest Chrome WebGPU benchmark sweep on `onnx-community/gemma-4-E2B-it-ONNX`.
-- [turboquant-benchmark.json](./turboquant-benchmark.json)
-  - Earlier exported benchmark data from the browser harness.
-- [Chrome Benchmark.txt](./Chrome%20Benchmark.txt)
-  - Earlier human-readable benchmark output capture.
+  - Short benchmark summary and interpretation of the latest Chrome WebGPU run.
 - [Chrome Benchmarkv2.txt](./Chrome%20Benchmarkv2.txt)
-  - Latest human-readable benchmark output capture used for the current manuscript updates.
-- [figures](./figures)
-  - Generated PNG figures for the current benchmark set.
+  - Primary human-readable benchmark capture for the latest run.
+- [Chrome Benchmark.txt](./Chrome%20Benchmark.txt)
+  - Earlier benchmark capture kept for comparison.
+- [turboquant-benchmark.json](./turboquant-benchmark.json)
+  - Earlier JSON export from the browser harness.
 - [tables](./tables)
-  - Generated CSV summary tables and row-level benchmark exports.
+  - Generated CSV summaries and row-level benchmark exports.
+- [figures](./figures)
+  - Generated PNG figures from the benchmark data.
+- [figures_and_tables.zip](./figures_and_tables.zip)
+  - Packaged benchmark figures and tables.
+- [benchmark-app](./benchmark-app)
+  - Standalone browser benchmark app used to run the Chrome/WebGPU suite against the local fork.
+- [generate_paper_assets.py](./generate_paper_assets.py)
+  - Asset-generation script used to build the benchmark tables and figures.
 
-## Recommended reading order
+## Current result summary
 
-1. Start with [draft-paper.md](./draft-paper.md) for the current manuscript draft.
-2. Use [turboquant-research-review.md](./turboquant-research-review.md) for the external context.
-3. Read [implementation-methods.md](./implementation-methods.md) to understand what this project actually built.
-4. Read [preprints-submission-notes.md](./preprints-submission-notes.md) before preparing a submission package.
-5. Use [benchmark-analysis.md](./benchmark-analysis.md), [tables](./tables), and [figures](./figures) for the empirical section.
-
-## Current status
-
-The current evidence supports a context-dependent systems paper rather than a simple all-positive or all-negative performance claim.
-
-- The TurboQuant-style cache path runs in Chrome WebGPU with Gemma 4.
-- The latest Chrome sweep shows a context-length crossover: TurboQuant is slower on short prompts, but faster on the longest prompt and slightly faster on `Long Context 1x` under `Safe Default`.
-- Compression is not uniformly positive: short prompts can expand the cache, while long-context cases reach roughly `1.39x` to `1.51x` compression.
-- `Safe Default` is currently the strongest quality-preserving setting in the latest sweep, with `5/5` exact matches.
-- The implementation is still TurboQuant-inspired rather than a faithful reproduction of the published accelerator-side system.
+- The TurboQuant-style cache path runs end-to-end in Chrome WebGPU with Gemma 4.
+- The latest run shows a context-length crossover:
+  - short prompts still favor `DynamicCache`
+  - long prompts favor `TurboQuantCache`
+- Compression is only positive once cache pressure is high enough.
+- `Safe Default` is the strongest overall setting in the current sweep, with `5/5` exact matches.
+- The implementation remains TurboQuant-inspired rather than a faithful reproduction of the published accelerator-side system.
